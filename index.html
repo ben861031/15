@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>收發文量分析平台 - 優化版</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+body{
+    font-family:"Microsoft JhengHei",sans-serif;
+    background:#f1f5f9;
+}
+.sortable:hover {
+    cursor: pointer;
+    background-color: #334155;
+}
+@media print {
+    body {
+        background: white !important;
+    }
+        .no-print {
+        display: none !important;
+    }
+    .capture-mode th, .capture-mode td {
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+    .shadow, .shadow-lg {
+        box-shadow: none !important;
+    }
+    .rounded-3xl {
+        border-radius: 8px !important;
+    }
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .overflow-auto {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+    #statsPage {
+        display: block !important;
+    }
+    canvas {
+        max-width: 100% !important;
+        page-break-inside: avoid;
+    }
+    .sticky {
+        position: static !important;
+    }
+    tr {
+        page-break-inside: avoid;
+    }
+}
+</style>
+</head>
+<body class="min-h-screen text-slate-800 bg-slate-50">
+<!-- Toast 通知容器 -->
+<div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-3"></div>
+
+<!-- 登入頁面 -->
+<div id="loginPage" class="min-h-screen hidden items-center justify-center bg-gradient-to-br from-[#e6edf8] to-[#f4f7fb] p-4">
+    <div class="bg-white rounded-[24px] shadow-2xl p-10 w-full max-w-[360px] flex flex-col items-center relative overflow-hidden">
+        <!-- 裝飾用光暈 -->
+        <div class="absolute -top-20 -right-20 w-40 h-40 bg-indigo-50 rounded-full blur-3xl opacity-60"></div>
+        <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-blue-50 rounded-full blur-3xl opacity-60"></div>
+        
+        <!-- Icon -->
+        <div class="bg-indigo-100 text-indigo-600 rounded-full w-20 h-20 flex items-center justify-center mb-5 z-10">
+            <i data-lucide="user" class="w-10 h-10"></i>
+        </div>
+        <!-- Title -->
+        <h2 class="text-xl font-bold text-slate-800 mb-8 tracking-wide z-10">收發文量分析平台</h2>
+        
+        <!-- Form -->
+        <div class="w-full space-y-4 z-10">
+            <input type="text" id="empId" placeholder="員工編號" class="w-full border border-slate-200 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-400">
+            <input type="password" id="empPwd" placeholder="密碼" class="w-full border border-slate-200 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-400" onkeypress="if(event.key === 'Enter') handleLogin()">
+            <button onclick="handleLogin()" class="w-full bg-[#4f70f8] hover:bg-indigo-600 text-white rounded-full py-3 text-sm font-semibold shadow-md shadow-indigo-200 transition-all mt-4 transform hover:scale-[1.02] active:scale-95">登入</button>
+        </div>
+    </div>
+</div>
+
+<!-- 系統上方導覽列 -->
+<nav class="bg-slate-900 text-white shadow-md sticky top-0 z-50 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <!-- 左側：Logo與系統名稱及選單 -->
+            <div class="flex items-center gap-3 sm:gap-4">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-400"></i>
+                    <span class="text-lg font-bold tracking-wide">收發文量分析平台</span>
+                </div>
+                
+                <div class="w-px h-5 bg-slate-700 hidden sm:block"></div>
+                
+                <!-- 進階功能下拉選單 -->
+                <div class="relative group hidden sm:block">
+                    <button class="flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors font-medium text-sm">
+                        <span>系統選單</span>
+                        <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5"></i>
+                    </button>
+                    <!-- Hover Dropdown Menu -->
+                    <div class="absolute left-0 mt-3 w-48 bg-white rounded-xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 origin-top-left">
+                        <div class="p-1.5 text-slate-800">
+                            <button onclick="openMailSettings()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors">
+                                <i data-lucide="mail" class="w-4 h-4 mr-2.5"></i> 信件設定
+                            </button>
+                            <div class="h-px bg-slate-100 my-1 mx-2"></div>
+                            <button onclick="exportJson()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors">
+                                <i data-lucide="download" class="w-4 h-4 mr-2.5"></i> 匯出備份 (JSON)
+                            </button>
+                            <button onclick="document.getElementById('jsonFileInput').click()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors">
+                                <i data-lucide="upload" class="w-4 h-4 mr-2.5"></i> 匯入還原 (JSON)
+                            </button>
+                            <div class="h-px bg-slate-100 my-1 mx-2"></div>
+                            <button onclick="resetData()" class="w-full text-left flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors font-medium">
+                                <i data-lucide="trash-2" class="w-4 h-4 mr-2.5"></i> 清除系統資料
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右側：上傳按鈕與登出 -->
+            <div class="flex items-center gap-2">
+                <button onclick="document.getElementById('incomingFile').click()" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors text-sm font-semibold shadow-sm">
+                    <i data-lucide="upload" class="w-4 h-4 hidden sm:block"></i>
+                    <span>收文上傳</span>
+                </button>
+                <button onclick="document.getElementById('outgoingFile').click()" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors text-sm font-semibold shadow-sm">
+                    <i data-lucide="upload" class="w-4 h-4 hidden sm:block"></i>
+                    <span>發文上傳</span>
+                </button>
+                
+                <button onclick="clearSystemCache()" class="ml-1 sm:ml-2 flex items-center gap-1.5 px-3.5 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors text-sm font-semibold border border-red-700">
+                    <i data-lucide="trash-2" class="w-4 h-4 hidden sm:block"></i>
+                    <span>清除快取</span>
+                </button>
+                <button onclick="logout()" class="ml-1 sm:ml-2 flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-lg transition-colors text-sm font-semibold border border-slate-700">
+                    <i data-lucide="log-out" class="w-4 h-4 hidden sm:block"></i>
+                    <span>登出</span>
+                </button>
+                
+                <input type="file" id="incomingFile" accept=".xlsx,.xls" class="hidden">
+                <input type="file" id="outgoingFile" accept=".xlsx,.xls" class="hidden">
+                <input type="file" id="jsonFileInput" accept=".json" class="hidden" onchange="importJson(event)">
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- 系統主畫面 -->
+<div id="mainApp" class="p-4 sm:p-6 hidden">
+<div class="max-w-7xl mx-auto">
+
+    <!-- 概覽數字區塊 -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 no-print">
+        <div class="bg-white rounded-3xl shadow p-5 text-center transition-transform hover:-translate-y-1">
+            <div class="text-slate-500 font-semibold">總公文量</div>
+            <div id="totalDocs" class="text-4xl font-bold text-slate-700 mt-2">0</div>
+        </div>
+        <div class="bg-white rounded-3xl shadow p-5 text-center transition-transform hover:-translate-y-1">
+            <div class="text-slate-500 font-semibold">部門數</div>
+            <div id="deptCount" class="text-4xl font-bold text-slate-700 mt-2">0</div>
+        </div>
+        <div class="bg-white rounded-3xl shadow p-5 text-center transition-transform hover:-translate-y-1">
+            <div class="text-slate-500 font-semibold">收文</div>
+            <div id="incomingCount" class="text-4xl font-bold text-blue-700 mt-2">0</div>
+        </div>
+        <div class="bg-white rounded-3xl shadow p-5 text-center transition-transform hover:-translate-y-1">
+            <div class="text-slate-500 font-semibold">發文</div>
+            <div id="outgoingCount" class="text-4xl font-bold text-emerald-700 mt-2">0</div>
+        </div>
+    </div>
+
+    <!-- 篩選與匯出區塊 -->
+    <div class="bg-white rounded-3xl shadow p-5 mb-6 no-print">
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div>
+                <label class="font-semibold text-sm">報表月份</label>
+                <div class="flex gap-2 mt-2">
+                    <select id="reportYear" class="w-1/2 border border-slate-200 rounded-2xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <option value="">年度</option>
+                        <option value="112年">112年</option>
+                        <option value="113年">113年</option>
+                        <option value="114年">114年</option>
+                        <option value="115年">115年</option>
+                        <option value="116年">116年</option>
+                        <option value="117年">117年</option>
+                        <option value="118年">118年</option>
+                    </select>
+                    <select id="reportMonth" class="w-1/2 border border-slate-200 rounded-2xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <option value="">月份</option>
+                        <option value="1月份">1月</option>
+                        <option value="2月份">2月</option>
+                        <option value="3月份">3月</option>
+                        <option value="4月份">4月</option>
+                        <option value="5月份">5月</option>
+                        <option value="6月份">6月</option>
+                        <option value="7月份">7月</option>
+                        <option value="8月份">8月</option>
+                        <option value="9月份">9月</option>
+                        <option value="10月份">10月</option>
+                        <option value="11月份">11月</option>
+                        <option value="12月份">12月</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="font-semibold text-sm">關鍵字搜尋</label>
+                <input id="keyword" type="text" placeholder="搜尋主旨、字號..." class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="font-semibold text-sm">部門篩選</label>
+                <select id="deptFilter" class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">全部部門</option>
+                </select>
+            </div>
+            <div>
+                <label class="font-semibold text-sm">收發文篩選</label>
+                <select id="modeFilter" class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">全部</option>
+                    <option value="收文">收文</option>
+                    <option value="發文">發文</option>
+                </select>
+            </div>
+            <div>
+                <label class="font-semibold text-sm invisible">操作</label>
+                <button onclick="exportEmailReport()" class="mt-2 w-full flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-emerald-600">
+                    <i data-lucide="mail" class="w-4 h-4 mr-1"></i> 主管信件
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 部門統計頁 -->
+    <div id="statsPage">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div id="deptTableCard" class="bg-white rounded-3xl shadow p-5">
+                <div class="flex flex-col gap-4 mb-4 w-full">
+                    <h2 class="text-lg xl:text-xl font-bold flex items-center text-slate-800">
+                        <i data-lucide="building-2" class="w-6 h-6 mr-2 text-slate-700 shrink-0"></i>
+                        <span class="leading-snug"><span class="dynamic-period text-slate-900 mr-1"></span>各部門收發文統計</span>
+                    </h2>
+                    <div class="flex items-center gap-2 flex-wrap no-print justify-end w-full" data-html2canvas-ignore="true">
+                        <button onclick="exportToPDF()" class="flex items-center bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出 PDF">
+                            <i data-lucide="file-down" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">匯出 PDF</span>
+                        </button>
+                        <button onclick="copyDeptTable()" class="flex items-center bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors border border-indigo-200" title="複製表格">
+                            <i data-lucide="copy" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">複製表格</span>
+                        </button>
+                        <button onclick="exportDeptStats()" class="flex items-center bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出統計 (Excel)">
+                            <i data-lucide="download" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">匯出統計</span>
+                        </button>
+                        <button onclick="exportAnnualMonthlyReport()" class="flex items-center bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出年度月報表 (Excel)">
+                            <i data-lucide="table-2" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">年度月報表</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-auto max-h-[60vh]">
+                    <table id="deptTable" class="w-full text-sm border-collapse">
+                        <thead class="bg-slate-800 text-white sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3 text-left"><div class="cell-content" style="position: relative;">部門</div></th>
+                                <th class="px-4 py-3 text-left"><div class="cell-content" style="position: relative;">收文</div></th>
+                                <th class="px-4 py-3 text-left"><div class="cell-content" style="position: relative;">發文</div></th>
+                                <th class="px-4 py-3 text-left"><div class="cell-content" style="position: relative;">小計</div></th>
+                            </tr>
+                        </thead>
+                        <tbody id="deptStatsBody"></tbody>
+                        <tfoot id="deptStatsFoot" class="bg-slate-100 sticky bottom-0 border-t-2 border-slate-300 font-bold"></tfoot>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-3xl shadow p-5 flex flex-col min-h-[400px]">
+                <div class="flex flex-col gap-4 mb-4 w-full">
+                    <h2 class="text-lg xl:text-xl font-bold flex items-center text-slate-800">
+                        <i data-lucide="bar-chart-3" class="w-6 h-6 mr-2 text-slate-700 shrink-0"></i>
+                        <span class="leading-snug"><span class="dynamic-period text-slate-900 mr-1"></span>部門公文量分布</span>
+                    </h2>
+                    <div class="flex items-center gap-2 flex-wrap no-print justify-end w-full" data-html2canvas-ignore="true">
+                        <!-- 切換圖表類型 (Segmented Control) -->
+                        <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                            <button onclick="changeChartType('stackedBar')" id="btnBar" class="px-3 py-1.5 rounded-lg bg-white shadow-sm text-sm font-bold text-slate-700 transition-all">長條圖</button>
+                            <button onclick="changeChartType('line')" id="btnLine" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all">折線圖</button>
+                        </div>
+                        <button onclick="copyChart()" class="flex items-center bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors border border-indigo-200" title="複製圖表">
+                            <i data-lucide="copy" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">複製圖表</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="w-full relative h-[350px] mt-4">
+                    <canvas id="deptChart"></canvas>
+                    <div id="chartEmptyState" class="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
+                        <i data-lucide="line-chart" class="w-16 h-16 mb-4 text-slate-200"></i>
+                        <p class="text-lg font-medium text-slate-500">暫無圖表數據</p>
+                        <p class="text-sm mt-1 text-slate-400">請同步雲端資料以自動產生分析圖表</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div> <!-- 結束 mainApp -->
+
+<!-- 信件設定 Modal -->
+<div id="mailSettingsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 opacity-0 transition-all duration-200" id="mailSettingsContainer">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i data-lucide="mail" class="w-5 h-5 text-indigo-500"></i> 信件設定
+            </h3>
+            <button onclick="closeMailSettings()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <!-- Body -->
+        <div class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1">正本收件者 (To)</label>
+                <textarea id="mailSettingsTo" rows="2" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50" placeholder="例如: 某某 <email@domain.com> (多筆請用逗號隔開)"></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1">副本收件者 (Cc)</label>
+                <textarea id="mailSettingsCc" rows="2" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50" placeholder="例如: 某某 <email@domain.com> (多筆請用逗號隔開)"></textarea>
+            </div>
+            <div class="text-xs text-slate-500 flex items-start gap-1.5 mt-2">
+                <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                <p>設定儲存後，會自動保存在您的瀏覽器中，並於有網路時同步備份至雲端 Google Sheets 的 Settings 工作表。</p>
+            </div>
+        </div>
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
+            <button onclick="closeMailSettings()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-200 transition-colors">
+                取消
+            </button>
+            <button onclick="saveMailSettings()" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors flex items-center gap-2">
+                <i data-lucide="save" class="w-4 h-4"></i> 儲存設定
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openMailSettings() {
+    const modal = document.getElementById('mailSettingsModal');
+    const container = document.getElementById('mailSettingsContainer');
+    let to = '';
+    let cc = '';
+    try {
+        const saved = localStorage.getItem('mailSettings');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.to) to = parsed.to;
+            if (parsed.cc) cc = parsed.cc;
+        }
+    } catch(e) {}
+    document.getElementById('mailSettingsTo').value = to;
+    document.getElementById('mailSettingsCc').value = cc;
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        container.classList.remove('scale-95', 'opacity-0');
+        container.classList.add('scale-100', 'opacity-100');
+    }, 10);
+}
+
+function closeMailSettings() {
+    const modal = document.getElementById('mailSettingsModal');
+    const container = document.getElementById('mailSettingsContainer');
+    container.classList.remove('scale-100', 'opacity-100');
+    container.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 200);
+}
+
+async function saveMailSettings() {
+    const to = document.getElementById('mailSettingsTo').value.trim();
+    const cc = document.getElementById('mailSettingsCc').value.trim();
+    const settings = { to, cc };
+    localStorage.setItem('mailSettings', JSON.stringify(settings));
+    showToast('設定已儲存', '信件設定已成功保存於本機。', 'success');
+    closeMailSettings();
+    try {
+        await fetch(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'syncSettings', data: settings })
+        });
+    } catch (err) {
+        console.error('Failed to sync settings to cloud', err);
+    }
+}
+
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbybDB7Amat7sJuvU4LE1XidMVt-RC1jOFNwkdpu62lXXS-e7IspaCvCaO3hO2vfnleI7w/exec';
+
+// 登入邏輯
+async function handleLogin() {
+    const id = document.getElementById('empId').value.trim();
+    const pwd = document.getElementById('empPwd').value.trim();
+    if (!id || !pwd) {
+        showToast('登入失敗', '請輸入員工編號與密碼', 'error');
+        return;
+    }
+    
+    const btn = document.querySelector('#loginPage button');
+    const originalText = btn.textContent;
+    btn.textContent = '驗證中...';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(`${GAS_URL}?action=login&id=${encodeURIComponent(id)}&pwd=${encodeURIComponent(pwd)}`);
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('flex');
+            document.getElementById('mainApp').classList.remove('hidden');
+            localStorage.setItem('isLoggedIn', 'true');
+            showToast('登入成功', result.message, 'success');
+            // 本機模式，維持原有的拖曳上傳與暫存邏輯
+            // 不自動同步雲端資料
+        } else {
+            showToast('登入失敗', result.message, 'error');
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
+    } catch (e) {
+        showToast('登入失敗', '無法連接到伺服器', 'error');
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+}
+
+let data = [];
+let filteredData = [];
+let chartInstance = null;
+let chartType = 'stackedBar';
+
+function changeChartType(type) {
+    chartType = type;
+    const btnBar = document.getElementById('btnBar');
+    const btnLine = document.getElementById('btnLine');
+    if (type === 'stackedBar') {
+        btnBar.className = 'px-3 py-1.5 rounded-lg bg-white shadow-sm text-sm font-bold text-slate-700 transition-all';
+        btnLine.className = 'px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all';
+    } else {
+        btnLine.className = 'px-3 py-1.5 rounded-lg bg-white shadow-sm text-sm font-bold text-slate-700 transition-all';
+        btnBar.className = 'px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all';
+    }
+    renderDeptStatsAndChart();
+}
+
+const keyword = document.getElementById('keyword');
+const deptFilter = document.getElementById('deptFilter');
+const modeFilter = document.getElementById('modeFilter');
+const reportYear = document.getElementById('reportYear');
+const reportMonth = document.getElementById('reportMonth');
+
+function getReportPeriod() {
+    return (reportYear.value + reportMonth.value).trim();
+}
+
+function updatePeriodDisplay() {
+    const val = getReportPeriod();
+    document.querySelectorAll('.dynamic-period').forEach(el => {
+        el.textContent = val ? val + ' ' : '';
+    });
+}
+reportYear.addEventListener('change', () => { updatePeriodDisplay(); filterData(); });
+reportMonth.addEventListener('change', () => { updatePeriodDisplay(); filterData(); });
+
+function showToast(title, message = '', type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    
+    let bgClass = type === 'success' ? 'bg-emerald-50 border-emerald-200' : (type === 'error' ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200');
+    let iconColor = type === 'success' ? 'text-emerald-500' : (type === 'error' ? 'text-red-500' : 'text-blue-500');
+    let iconName = type === 'success' ? 'check-circle' : (type === 'error' ? 'x-circle' : 'info');
+    
+    toast.className = `flex items-start p-4 rounded-xl border shadow-lg transform transition-all duration-300 translate-y-10 opacity-0 ${bgClass} w-80`;
+    const formattedMessage = message ? `<p class="text-sm text-slate-600 mt-1 leading-relaxed">${message.replace(/\n/g, '<br>')}</p>` : '';
+    
+    toast.innerHTML = `
+        <i data-lucide="${iconName}" class="w-6 h-6 mr-3 ${iconColor} shrink-0 mt-0.5"></i>
+        <div class="flex-1">
+            <h4 class="font-bold text-slate-800">${title}</h4>
+            ${formattedMessage}
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    lucide.createIcons();
+    requestAnimationFrame(() => toast.classList.remove('translate-y-10', 'opacity-0'));
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-full');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+function resetData() {
+    if(confirm('確定要清除所有資料（包含本機暫存）嗎？')) {
+        data = [];
+        localStorage.removeItem('docData');
+        localStorage.removeItem('incomingInfo');
+        localStorage.removeItem('outgoingInfo');
+
+        document.getElementById('incomingFile').value = '';
+        document.getElementById('outgoingFile').value = '';
+
+
+
+
+
+
+
+        keyword.value = '';
+        modeFilter.value = '';
+        deptFilter.value = '';
+        init();
+        showToast('已清除', '所有資料已成功清除');
+    }
+}
+
+async function syncDataToCloud() {
+    try {
+        await fetch(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'syncData', data: data })
+        });
+    } catch (err) {
+        console.error('Auto sync failed:', err);
+    }
+}
+
+async function fetchDataFromCloud() {
+    if (!GAS_URL) return null;
+    try {
+        const response = await fetch(`${GAS_URL}?action=getData`, {
+            method: 'GET'
+        });
+        const result = await response.json();
+        if (result && result.status === 'success') {
+            return result.data;
+        }
+    } catch(err) {
+        console.error('Cloud fetch failed:', err);
+    }
+    return null;
+}
+
+function clearSystemCache() {
+    Swal.fire({
+        title: '確定要清除系統快取嗎？',
+        text: '這將會重新從雲端下載最新資料',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: '是的，清除！',
+        cancelButtonText: '取消'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            localStorage.removeItem('docData');
+            location.reload();
+        }
+    });
+}
+
+function logout() {
+    localStorage.removeItem('isLoggedIn');
+    location.reload();
+}
+
+function setFileInfo(mode, filename, timeStr) {
+    if (mode === '收文') {
+
+
+
+        localStorage.setItem('incomingInfo', JSON.stringify({ filename, timeStr }));
+    } else {
+
+
+
+        localStorage.setItem('outgoingInfo', JSON.stringify({ filename, timeStr }));
+    }
+}
+
+document.getElementById('incomingFile').addEventListener('change', (e) => {
+    const fn = e.target.files[0]?.name;
+    if(fn) {
+        handleFile(e, '收文', fn);
+    }
+});
+
+document.getElementById('outgoingFile').addEventListener('change', (e) => {
+    const fn = e.target.files[0]?.name;
+    if(fn) {
+        handleFile(e, '發文', fn);
+    }
+});
+
+function excelDateToJSDate(serial) {
+    if (!serial) return '';
+    if (!isNaN(serial)) {
+        const utc_days = Math.floor(serial - 25569);
+        const utc_value = utc_days * 86400;
+        const date_info = new Date(utc_value * 1000);
+        const year = date_info.getFullYear();
+        const month = String(date_info.getMonth() + 1).padStart(2, '0');
+        const day = String(date_info.getDate()).padStart(2, '0');
+        return `${year}/${month}/${day}`;
+    }
+    return String(serial);
+}
+
+async function handleFile(e, mode, filename) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    e.target.value = '';
+
+    const currentYear = new Date().getFullYear() - 1911;
+
+    const { value: formValues } = await Swal.fire({
+        title: `匯入${mode}資料`,
+        html: `
+            <div class="mb-2 text-sm text-slate-500 font-semibold">檔案：${filename}</div>
+            <div class="mb-4 text-xs text-slate-400">請指定這些資料要歸檔的年份與月份</div>
+            <div class="flex gap-2 justify-center">
+                <input id="swal-input1" class="swal2-input !w-1/2 !mx-0 !mt-0" type="number" placeholder="民國年 (例:${currentYear})" value="${currentYear}">
+                <select id="swal-input2" class="swal2-select !w-1/2 !mx-0 !mt-0 text-sm">
+                    <option value="" disabled selected>月份</option>
+                    ${Array.from({length: 12}, (_, i) => `<option value="${i + 1}">${i + 1}月</option>`).join('')}
+                </select>
+            </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: '確認匯入',
+        cancelButtonText: '取消',
+        confirmButtonColor: '#4f46e5',
+        preConfirm: () => {
+            const year = document.getElementById('swal-input1').value;
+            const month = document.getElementById('swal-input2').value;
+            if (!year || !month) {
+                Swal.showValidationMessage('請完整輸入年份與月份！');
+            }
+            return { year: parseInt(year, 10), month: parseInt(month, 10) };
+        }
+    });
+
+    if (!formValues) return;
+    const { year, month } = formValues;
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        try {
+            const workbook = XLSX.read(event.target.result, { type: 'binary' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const raw = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+            const existingKeys = new Set(data.map(d => `${d.mode}_${d.docNo}`));
+            let addedCount = 0;
+            let duplicateCount = 0;
+
+            for (let i = 0; i < raw.length; i++) {
+                const row = raw[i];
+                const docNo = String(row['總收發文號'] || '').trim();
+                
+                if (docNo !== '') {
+                    const nextRow = (i + 1 < raw.length && !raw[i+1]['總收發文號']) ? raw[i+1] : {};
+                    let topRef = excelDateToJSDate(row['來(發)文字號'] || '');
+                    let bottomRef = excelDateToJSDate(nextRow['來(發)文字號'] || '');
+
+                    let parsedDept = String(row['承辦部門'] || row['承辦單位'] || '未分類').trim();
+                    if (parsedDept === '水利防災部') parsedDept = '水利部';
+
+                    const key = `${mode}_${docNo}`;
+                    if (existingKeys.has(key)) {
+                        duplicateCount++;
+                        continue;
+                    }
+
+                    data.push({
+                        mode: mode,
+                        docNo: docNo,
+                        docType: String(row['文別'] || ''),
+                        docRef: `${topRef} ${bottomRef}`.trim(),
+                        subject: String(row['主旨'] || row['公文主旨'] || ''),
+                        dept: parsedDept,
+                        uploadYear: year,
+                        uploadMonth: month
+                    });
+                    
+                    existingKeys.add(key);
+                    addedCount++;
+                }
+            }
+            
+            localStorage.setItem('docData', JSON.stringify(data));
+            syncDataToCloud(); syncDataToCloud();
+            const now = new Date();
+            const timeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            
+            setFileInfo(mode, `最新匯入: ${filename} (${year}年${month}月)`, timeStr);
+            
+            if (duplicateCount > 0) {
+                showToast('匯入完成', `新增 ${addedCount} 筆資料\n(已自動忽略 ${duplicateCount} 筆重複公文)`, 'success');
+            } else {
+                showToast('匯入完成', `已成功新增 ${addedCount} 筆資料`, 'success');
+            }
+            
+            init();
+        } catch(err) {
+            showToast('讀取失敗', '請確認檔案格式是否正確', 'error');
+            console.error(err);
+        }
+    };
+    reader.readAsBinaryString(file);
+}
+
+function init() {
+    updateOverviewStats();
+    renderFilters();
+    filterData();
+}
+
+function updateOverviewStats() {
+    document.getElementById('totalDocs').textContent = data.length;
+    document.getElementById('deptCount').textContent = new Set(data.map(x => x.dept)).size;
+    document.getElementById('incomingCount').textContent = data.filter(x => x.mode === '收文').length;
+    document.getElementById('outgoingCount').textContent = data.filter(x => x.mode === '發文').length;
+}
+
+function renderFilters() {
+    const currentDept = deptFilter.value;
+    deptFilter.innerHTML = '<option value="">全部部門</option>';
+    const depts = [...new Set(data.map(x => x.dept))].sort();
+    depts.forEach(dept => {
+        const option = document.createElement('option');
+        option.value = dept;
+        option.textContent = dept;
+        deptFilter.appendChild(option);
+    });
+    if (depts.includes(currentDept)) deptFilter.value = currentDept;
+}
+
+function filterData() {
+    const key = keyword.value.toLowerCase();
+    const dept = deptFilter.value;
+    const mode = modeFilter.value;
+    const yearVal = document.getElementById('reportYear').value;
+    const monthVal = document.getElementById('reportMonth').value;
+    
+    let targetYear = yearVal ? parseInt(yearVal.replace('年', ''), 10) : null;
+    let targetMonth = monthVal ? parseInt(monthVal.replace('月份', ''), 10) : null;
+
+    filteredData = data.filter(item => {
+        const text = `${item.docNo} ${item.docType} ${item.docRef} ${item.subject} ${item.dept} ${item.mode}`.toLowerCase();
+        let matchYear = targetYear !== null ? (item.uploadYear === targetYear || item.uploadYear === targetYear + 1911) : true;
+        let matchMonth = targetMonth !== null ? (item.uploadMonth === targetMonth) : true;
+        return text.includes(key) && (!dept || item.dept === dept) && (!mode || item.mode === mode) && matchYear && matchMonth;
+    });
+
+    updateOverviewStats();
+    renderDeptStatsAndChart();
+}
+
+function renderDeptStatsAndChart() {
+    const stats = {};
+    let totalIncoming = 0;
+    let totalOutgoing = 0;
+    const chartEmptyState = document.getElementById('chartEmptyState');
+    
+    filteredData.forEach(item => {
+        if (!stats[item.dept]) stats[item.dept] = { incoming: 0, outgoing: 0 };
+        if (item.mode === '收文') { stats[item.dept].incoming++; totalIncoming++; }
+        if (item.mode === '發文') { stats[item.dept].outgoing++; totalOutgoing++; }
+    });
+
+    const sortedStats = Object.entries(stats).sort((a, b) => (b[1].incoming + b[1].outgoing) - (a[1].incoming + a[1].outgoing));
+
+    if (sortedStats.length === 0) {
+        document.getElementById('deptStatsBody').innerHTML = `<tr><td colspan="4" class="px-4 py-16 text-center border-b">
+            <div class="flex flex-col items-center justify-center text-slate-400">
+                <i data-lucide="bar-chart-2" class="w-16 h-16 mb-4 text-slate-200"></i>
+                <p class="text-lg font-medium text-slate-500">暫無統計數據</p>
+            </div>
+        </td></tr>`;
+        document.getElementById('deptStatsFoot').innerHTML = '';
+        if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+        if (chartEmptyState) chartEmptyState.classList.remove('hidden');
+    } else {
+        if (chartEmptyState) chartEmptyState.classList.add('hidden');
+        document.getElementById('deptStatsBody').innerHTML = sortedStats.map(([dept, val]) => `
+            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                <td class="px-4 py-3 font-medium text-slate-800"><div class="cell-content" style="position: relative;">${dept}</div></td>
+                <td class="px-4 py-3 text-slate-600"><div class="cell-content" style="position: relative;">${val.incoming}</div></td>
+                <td class="px-4 py-3 text-slate-600"><div class="cell-content" style="position: relative;">${val.outgoing}</div></td>
+                <td class="px-4 py-3 font-semibold text-slate-900"><div class="cell-content" style="position: relative;">${val.incoming + val.outgoing}</div></td>
+            </tr>
+        `).join('');
+
+        document.getElementById('deptStatsFoot').innerHTML = `
+            <tr class="text-slate-900">
+                <td class="px-4 py-3 font-bold"><div class="cell-content" style="position: relative;">全公司總計</div></td>
+                <td class="px-4 py-3 font-bold text-slate-700"><div class="cell-content" style="position: relative;">${totalIncoming}</div></td>
+                <td class="px-4 py-3 font-bold text-slate-700"><div class="cell-content" style="position: relative;">${totalOutgoing}</div></td>
+                <td class="px-4 py-3 font-black"><div class="cell-content" style="position: relative;">${totalIncoming + totalOutgoing}</div></td>
+            </tr>
+        `;
+        renderChart(sortedStats);
+    }
+    lucide.createIcons();
+}
+
+function renderChart(sortedStats) {
+    const topDepts = sortedStats.slice(0, 15);
+    const labels = topDepts.map(s => s[0]);
+    const incomingData = topDepts.map(s => s[1].incoming);
+    const outgoingData = topDepts.map(s => s[1].outgoing);
+    const isStacked = chartType === 'stackedBar';
+    const configType = chartType === 'line' ? 'line' : 'bar';
+
+    const ctx = document.getElementById('deptChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: configType,
+        data: {
+            labels: labels,
+            datasets: [
+                { label: '收文', data: incomingData, backgroundColor: 'rgba(59, 130, 246, 0.8)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: chartType === 'line' ? 3 : 0, borderRadius: 4, tension: 0.3, fill: false },
+                { label: '發文', data: outgoingData, backgroundColor: 'rgba(16, 185, 129, 0.8)', borderColor: 'rgba(16, 185, 129, 1)', borderWidth: chartType === 'line' ? 3 : 0, borderRadius: 4, tension: 0.3, fill: false }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: { x: { stacked: isStacked }, y: { stacked: isStacked, beginAtZero: true } }
+        }
+    });
+}
+
+function exportToPDF() {
+    if (filteredData.length === 0) return showToast('匯出失敗', '沒有資料', 'error');
+    document.title = `${getReportPeriod()} 收發文統計報表`;
+    window.print();
+}
+
+function exportDeptStats() {
+    if(filteredData.length === 0) return showToast('匯出失敗', '沒有資料', 'error');
+    const stats = {};
+    filteredData.forEach(item => {
+        if (!stats[item.dept]) stats[item.dept] = { incoming: 0, outgoing: 0 };
+        if (item.mode === '收文') stats[item.dept].incoming++;
+        if (item.mode === '發文') stats[item.dept].outgoing++;
+    });
+    const exportData = Object.entries(stats).map(([dept, val]) => ({ '部門': dept, '收文': val.incoming, '發文': val.outgoing, '小計': val.incoming + val.outgoing }));
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '部門統計');
+    XLSX.writeFile(wb, `${getReportPeriod()}_部門統計.xlsx`);
+}
+
+function exportAnnualMonthlyReport() {
+    if (data.length === 0) return showToast('匯出失敗', '沒有資料', 'error');
+    
+    const yearSelect = document.getElementById('reportYear');
+    if (!yearSelect.value) return showToast('匯出失敗', '請先在上方「篩選」區選擇年度', 'error');
+    
+    const selectedYearTw = parseInt(yearSelect.value.replace('年', ''), 10);
+    const selectedYearGregorian = selectedYearTw + 1911;
+
+    // 篩選出符合該年的資料
+    const yearData = data.filter(d => {
+        return d.uploadYear === selectedYearTw || d.uploadYear === selectedYearGregorian;
+    });
+
+    if (yearData.length === 0) return showToast('匯出失敗', `找不到 ${yearSelect.value} 的資料，請確認檔案內容`, 'error');
+
+    // 取得所有部門並排序
+    const depts = new Set();
+    yearData.forEach(d => { if (d.dept) depts.add(d.dept); });
+    
+    const order = ["環評部", "永續部", "循環部", "水務部", "能資部", "水利部", "行政部", "職安中心", "研資部", "專案部", "管理部", "資訊部", "業務部"];
+    const deptArray = Array.from(depts).sort((a, b) => {
+        let idxA = order.indexOf(a);
+        let idxB = order.indexOf(b);
+        if (idxA === -1) idxA = 999;
+        if (idxB === -1) idxB = 999;
+        if (idxA !== idxB) return idxA - idxB;
+        return a.localeCompare(b);
+    });
+
+    // 建立 1 到 12 月的統計表
+    const months = Array.from({length: 12}, (_, i) => i + 1);
+    const stats = {};
+    months.forEach(m => {
+        stats[m] = {};
+        deptArray.forEach(d => { stats[m][d] = { incoming: 0, outgoing: 0 }; });
+        stats[m].total = { incoming: 0, outgoing: 0 };
+    });
+
+    // 統計數量
+    yearData.forEach(d => {
+        const m = d.uploadMonth;
+        if (m && stats[m] && stats[m][d.dept]) {
+            if (d.mode === '收文') {
+                stats[m][d.dept].incoming++;
+                stats[m].total.incoming++;
+            }
+            if (d.mode === '發文') {
+                stats[m][d.dept].outgoing++;
+                stats[m].total.outgoing++;
+            }
+        }
+    });
+
+    // 轉 Excel 陣列
+    const wsData = [];
+    const header1 = ["月份"];
+    const header2 = [""];
+    
+    deptArray.forEach(dept => {
+        header1.push(dept);
+        header1.push("");
+        header2.push("收文", "發文");
+    });
+    header1.push("加總", "", "");
+    header2.push("收文", "發文", "小計");
+    
+    wsData.push(header1);
+    wsData.push(header2);
+
+    months.forEach(m => {
+        if (stats[m].total.incoming === 0 && stats[m].total.outgoing === 0) return; // 該月無資料則跳過
+        
+        const rowIndex = wsData.length + 1; // Excel 列索引從 1 開始
+        const row = [`${m}月`];
+        let inCols = [];
+        let outCols = [];
+        
+        deptArray.forEach((dept, idx) => {
+            row.push(stats[m][dept].incoming, stats[m][dept].outgoing);
+            
+            const inColLetter = XLSX.utils.encode_col(1 + idx * 2);
+            const outColLetter = XLSX.utils.encode_col(2 + idx * 2);
+            inCols.push(`${inColLetter}${rowIndex}`);
+            outCols.push(`${outColLetter}${rowIndex}`);
+        });
+        
+        const inFormula = inCols.length > 0 ? inCols.join('+') : "0";
+        const outFormula = outCols.length > 0 ? outCols.join('+') : "0";
+        
+        const totalInColLetter = XLSX.utils.encode_col(1 + deptArray.length * 2);
+        const totalOutColLetter = XLSX.utils.encode_col(2 + deptArray.length * 2);
+        const overallTotalFormula = `${totalInColLetter}${rowIndex}+${totalOutColLetter}${rowIndex}`;
+
+        row.push(
+            { t: 'n', v: stats[m].total.incoming, f: inFormula },
+            { t: 'n', v: stats[m].total.outgoing, f: outFormula },
+            { t: 'n', v: stats[m].total.incoming + stats[m].total.outgoing, f: overallTotalFormula }
+        );
+        wsData.push(row);
+    });
+
+    // === 加入底部的「加總」兩列 ===
+    const rowInTotal = ["加總"];
+    const rowSubTotal = [""];
+
+    let totalInCols = [];
+    let totalOutCols = [];
+    
+    // 計算行數範圍
+    const endRow = wsData.length; // 因為前面加入了表頭2列，所以如果是1月到12月，endRow 會是 14。資料列是 3 到 endRow。
+
+    deptArray.forEach((dept, idx) => {
+        const inColLetter = XLSX.utils.encode_col(1 + idx * 2);
+        const outColLetter = XLSX.utils.encode_col(2 + idx * 2);
+
+        let inSum = 0;
+        let outSum = 0;
+        months.forEach(m => {
+            if (stats[m].total.incoming === 0 && stats[m].total.outgoing === 0) return;
+            inSum += stats[m][dept].incoming;
+            outSum += stats[m][dept].outgoing;
+        });
+
+        rowInTotal.push(
+            { t: 'n', v: inSum, f: `SUM(${inColLetter}3:${inColLetter}${endRow})` },
+            { t: 'n', v: outSum, f: `SUM(${outColLetter}3:${outColLetter}${endRow})` }
+        );
+        
+        rowSubTotal.push({ t: 'n', v: inSum + outSum, f: `${inColLetter}${endRow+1}+${outColLetter}${endRow+1}` });
+        rowSubTotal.push(""); // for merge
+
+        totalInCols.push(`${inColLetter}${endRow+1}`);
+        totalOutCols.push(`${outColLetter}${endRow+1}`);
+    });
+
+    const overallInColLetter = XLSX.utils.encode_col(1 + deptArray.length * 2);
+    const overallOutColLetter = XLSX.utils.encode_col(2 + deptArray.length * 2);
+    
+    let overallInSum = 0;
+    let overallOutSum = 0;
+    months.forEach(m => {
+        if (stats[m].total.incoming === 0 && stats[m].total.outgoing === 0) return;
+        overallInSum += stats[m].total.incoming;
+        overallOutSum += stats[m].total.outgoing;
+    });
+
+    rowInTotal.push(
+        { t: 'n', v: overallInSum, f: `SUM(${overallInColLetter}3:${overallInColLetter}${endRow})` },
+        { t: 'n', v: overallOutSum, f: `SUM(${overallOutColLetter}3:${overallOutColLetter}${endRow})` },
+        { t: 'n', v: overallInSum + overallOutSum, f: `SUM(${overallInColLetter}3:${overallInColLetter}${endRow})+SUM(${overallOutColLetter}3:${overallOutColLetter}${endRow})` }
+    );
+
+    rowSubTotal.push({ t: 'n', v: overallInSum + overallOutSum, f: `${overallInColLetter}${endRow+1}+${overallOutColLetter}${endRow+1}` }, "", ""); // for merge 3 cols
+
+    wsData.push(rowInTotal);
+    wsData.push(rowSubTotal);
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // 跨欄置中
+    const merges = [];
+    merges.push({ s: { r: 0, c: 0 }, e: { r: 1, c: 0 } });
+    
+    let colIndex = 1;
+    deptArray.forEach(() => {
+        merges.push({ s: { r: 0, c: colIndex }, e: { r: 0, c: colIndex + 1 } });
+        colIndex += 2;
+    });
+    merges.push({ s: { r: 0, c: colIndex }, e: { r: 0, c: colIndex + 2 } });
+    
+    // 跨欄置中 (底部加總)
+    const totalRowIdx1 = wsData.length - 2; // rowInTotal 的行索引 (0-indexed)
+    const totalRowIdx2 = wsData.length - 1; // rowSubTotal 的行索引 (0-indexed)
+    
+    // 將 "加總" 跨兩列合併
+    merges.push({ s: { r: totalRowIdx1, c: 0 }, e: { r: totalRowIdx2, c: 0 } });
+    
+    // 對齊調整：底部加總與其他欄位垂直對齊
+    let bottomColIndex = 1;
+    deptArray.forEach(() => {
+        merges.push({ s: { r: totalRowIdx2, c: bottomColIndex }, e: { r: totalRowIdx2, c: bottomColIndex + 1 } });
+        bottomColIndex += 2;
+    });
+    // 右下角最後三欄合併
+    merges.push({ s: { r: totalRowIdx2, c: bottomColIndex }, e: { r: totalRowIdx2, c: bottomColIndex + 2 } });
+    
+    ws['!merges'] = merges;
+
+    // 設定寬度與列高
+    const cols = [{ wch: 12 }]; 
+    for(let i = 0; i < deptArray.length * 2; i++) cols.push({ wch: 8 });
+    cols.push({ wch: 10 }, { wch: 10 }, { wch: 12 });
+    ws['!cols'] = cols;
+
+    const rows = [];
+    for(let i = 0; i < wsData.length; i++) {
+        rows.push({ hpx: 26 }); // 設定 26px 的列高，讓畫面更有呼吸空間
+    }
+    ws['!rows'] = rows;
+
+    // 寫入樣式
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for(let R = range.s.r; R <= range.e.r; ++R) {
+        for(let C = range.s.c; C <= range.e.c; ++C) {
+            const cellRef = XLSX.utils.encode_cell({r: R, c: C});
+            if(!ws[cellRef]) ws[cellRef] = { v: '', t: 's' };
+            
+            const style = {
+                font: { name: "Microsoft JhengHei", sz: 11 },
+                alignment: { vertical: "center", horizontal: "center" },
+                border: {
+                    top: { style: "thin", color: { rgb: "BFBFBF" } },
+                    bottom: { style: "thin", color: { rgb: "BFBFBF" } },
+                    left: { style: "thin", color: { rgb: "BFBFBF" } },
+                    right: { style: "thin", color: { rgb: "BFBFBF" } }
+                }
+            };
+            
+            const isHeader = (R === 0 || R === 1);
+            const isTotalRow = (R >= range.e.r - 1); // 最後兩列是總計列
+            const isTotalCol = (C >= range.e.c - 2);
+            
+            if (isHeader) {
+                style.font.bold = true;
+                if (R === 0) {
+                    style.fill = { fgColor: { rgb: isTotalCol ? "C65911" : "203764" } }; // 表頭：深藍 / 總計深橘
+                    style.font.color = { rgb: "FFFFFFFF" };
+                } else { 
+                    style.fill = { fgColor: { rgb: isTotalCol ? "F4B084" : "D9E1F2" } }; // 次表頭：淺藍 / 淺橘
+                }
+            } else if (isTotalRow) {
+                style.numFmt = "#,##0";
+                style.font.bold = true;
+                style.fill = { fgColor: { rgb: "FCE4D6" } }; // 底部加總一律用淺橘色
+            } else {
+                style.numFmt = "#,##0";
+                if (C === 0) {
+                    style.fill = { fgColor: { rgb: "D9E1F2" } }; // 第一欄月份底色
+                    style.font.bold = true;
+                } else if (isTotalCol) {
+                    style.fill = { fgColor: { rgb: "FCE4D6" } }; // 總計欄位底色
+                    if (C === range.e.c) style.font.bold = true; // 總計的小計加粗
+                } else {
+                    style.fill = { fgColor: { rgb: R % 2 === 0 ? "F9F9F9" : "FFFFFFFF" } }; // 資料列交錯底色
+                }
+            }
+            
+            ws[cellRef].s = style;
+        }
+    }
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, `${yearSelect.value}各月總表`);
+    XLSX.writeFile(wb, `${yearSelect.value}各部門收發文月報表.xlsx`);
+    showToast('匯出成功', '年度月報表已下載', 'success');
+}
+
+function exportEmailReport() {
+    if (data.length === 0) return showToast('匯出失敗', '沒有資料', 'error');
+    
+    const yearSelect = document.getElementById('reportYear');
+    const monthSelect = document.getElementById('reportMonth');
+    
+    if (!yearSelect.value || !monthSelect.value) {
+        return showToast('匯出失敗', '請先在上方「篩選」區選擇年度與月份', 'error');
+    }
+    
+    const currYearTw = parseInt(yearSelect.value.replace('年', ''), 10);
+    const currMonth = parseInt(monthSelect.value.replace('月', ''), 10);
+    
+    let prevYearTw = currYearTw;
+    let prevMonth = currMonth - 1;
+    if (prevMonth === 0) {
+        prevMonth = 12;
+        prevYearTw -= 1;
+    }
+    
+    const lastYearTw = currYearTw - 1;
+    const lastMonth = currMonth;
+    
+    function getStats(y, m) {
+        const d = data.filter(item => {
+            const yMatch = (item.uploadYear === y || item.uploadYear === y + 1911);
+            const mMatch = (item.uploadMonth === m);
+            return yMatch && mMatch;
+        });
+        const inCount = d.filter(x => x.mode === '收文').length;
+        const outCount = d.filter(x => x.mode === '發文').length;
+        return { in: inCount, out: outCount, total: inCount + outCount };
+    }
+    
+    const currStats = getStats(currYearTw, currMonth);
+    const prevStats = getStats(prevYearTw, prevMonth);
+    const lastStats = getStats(lastYearTw, lastMonth);
+    
+            const htmlBody = `<html>
+<head>
+<style>
+  table { border-collapse: collapse; text-align: center; font-size: 12pt; }
+  th, td { border: 1px solid black; padding: 12px; }
+  th { background-color: #FCE4D6; font-weight: normal; }
+  .bg-subtotal { background-color: #FFF2CC; }
+  .bold { font-weight: bold; }
+  body, div, span, td, th { font-family: 'Times New Roman', 標楷體, DFKai-SB, BiauKai, serif; mso-ascii-font-family: 'Times New Roman'; mso-hansi-font-family: 'Times New Roman'; mso-fareast-font-family: '標楷體'; }
+</style>
+</head>
+<body style="font-family: 'Times New Roman', 標楷體, DFKai-SB, BiauKai, serif; mso-ascii-font-family: 'Times New Roman'; mso-fareast-font-family: '標楷體'; mso-hansi-font-family: 'Times New Roman'; font-size: 12pt; margin: 0; padding: 0;">
+  <div style="margin-bottom: 12pt;"><font face="Times New Roman, 標楷體">您好：</font></div>
+  <div style="margin-bottom: 12pt;"><span style="color: blue; font-weight: bold;"><font face="Times New Roman, 標楷體">〔${currYearTw}年${currMonth}月份〕</font></span><font face="Times New Roman, 標楷體">收發文量，請參如下表。</font></div>
+  <table style="width: 500px;">
+    <thead>
+      <tr>
+        <th class="bold" width="16%"><font face="Times New Roman, 標楷體">類型</font></th>
+        <th width="28%"><span class="bold"><font face="Times New Roman, 標楷體">去年同期</font></span><br><font face="Times New Roman, 標楷體">(${lastYearTw}年${lastMonth}月份)</font></th>
+        <th width="28%"><span class="bold"><font face="Times New Roman, 標楷體">前一期</font></span><br><font face="Times New Roman, 標楷體">(${prevYearTw}年${prevMonth}月份)</font></th>
+        <th width="28%"><span class="bold"><font face="Times New Roman, 標楷體">本期</font></span><br><font face="Times New Roman, 標楷體">(${currYearTw}年${currMonth}月份)</font></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><font face="Times New Roman, 標楷體">收文</font></td>
+        <td><font face="Times New Roman, 標楷體">${lastStats.in.toLocaleString()}</font></td>
+        <td><font face="Times New Roman, 標楷體">${prevStats.in.toLocaleString()}</font></td>
+        <td><font face="Times New Roman, 標楷體">${currStats.in.toLocaleString()}</font></td>
+      </tr>
+      <tr>
+        <td><font face="Times New Roman, 標楷體">發文</font></td>
+        <td><font face="Times New Roman, 標楷體">${lastStats.out.toLocaleString()}</font></td>
+        <td><font face="Times New Roman, 標楷體">${prevStats.out.toLocaleString()}</font></td>
+        <td><font face="Times New Roman, 標楷體">${currStats.out.toLocaleString()}</font></td>
+      </tr>
+      <tr class="bg-subtotal">
+        <td><font face="Times New Roman, 標楷體">小計</font></td>
+        <td><font face="Times New Roman, 標楷體">${lastStats.total.toLocaleString()}</font></td>
+        <td><font face="Times New Roman, 標楷體">${prevStats.total.toLocaleString()}</font></td>
+        <td><font face="Times New Roman, 標楷體">${currStats.total.toLocaleString()}</font></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="bold" style="margin-top: 18pt; margin-bottom: 12pt;"><font face="Times New Roman, 標楷體">備註：</font></div>
+  <div><font face="Times New Roman, 標楷體">詳細分析資料(每年/每月/各部門/圖表)，請參見Y:\\Y7\\A行政\\A0 公文收發檔\\每季公文收發文統計。</font></div>
+</body>
+</html>`;
+
+    // 處理 Header 中文亂碼 (RFC 2047 Base64 處理)
+    const encodeMime = (text) => `=?utf-8?B?${btoa(unescape(encodeURIComponent(text)))}?=`;
+    const encodeEmails = (emailStr) => {
+        if (!emailStr) return '';
+        return emailStr.split(',').map(s => {
+            const match = s.trim().match(/^(.*?)(<.*>)$/);
+            if (match) {
+                const name = match[1].trim();
+                const mail = match[2].trim();
+                return name ? `${encodeMime(name)} ${mail}` : mail;
+            }
+            return s.trim();
+        }).join(', ');
+    };
+
+    let toSetting = '';
+    let ccSetting = '';
+    try {
+        const saved = localStorage.getItem('mailSettings');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.to !== undefined) toSetting = parsed.to;
+            if (parsed.cc !== undefined) ccSetting = parsed.cc;
+        }
+    } catch(e) {}
+    
+    const to = encodeEmails(toSetting);
+    const cc = encodeEmails(ccSetting);
+    const actualSubject = `${currYearTw}年${currMonth}月份收發文量，請卓參。`;
+    const subjEncoded = encodeMime(actualSubject);
+
+    const emlContent = `To: ${to}\r\nCc: ${cc}\r\nSubject: ${subjEncoded}\r\nX-Unsent: 1\r\nContent-Type: text/html; charset="utf-8"\r\n\r\n${htmlBody}`;
+
+    const blob = new Blob([emlContent], { type: 'message/rfc822' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `主管信件_${currYearTw}年${currMonth}月.eml`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('匯出成功', '主管信件草稿(EML)已自動下載，點擊開啟', 'success');
+}
+
+async function copyDeptTable() {
+    const tbody = document.getElementById('deptStatsBody');
+    const tfoot = document.getElementById('deptStatsFoot');
+    if (!tbody || tbody.rows.length === 0 || (tbody.rows.length === 1 && tbody.rows[0].cells.length < 4)) {
+        return showToast('複製失敗', '沒有資料可複製', 'error');
+    }
+
+    const period = getReportPeriod();
+    const prefix = period ? period + ' ' : '';
+    
+    // 建立帶有 Inline CSS 的 HTML 表格字串 (確保貼到 Word/Excel/Outlook 時格式漂亮且置中)
+    let html = `
+    <div style="font-family: 'Times New Roman', 標楷體, DFKai-SB, BiauKai, serif; mso-fareast-font-family: '標楷體'; text-align: center;">
+        <h2 style="font-size: 16pt; font-weight: bold; margin-bottom: 10px; margin-top: 0;">
+            ${prefix}各部門收發文統計
+        </h2>
+        <table style="width: 100%; max-width: 800px; margin: 0 auto; border-collapse: collapse; font-size: 12pt; border: 1px solid #000; text-align: center; vertical-align: middle;">
+            <thead>
+                <tr style="background-color: #1e293b; color: #ffffff;">
+                    <th style="border: 1px solid #000; padding: 10px; font-weight: bold;">部門</th>
+                    <th style="border: 1px solid #000; padding: 10px; font-weight: bold;">收文</th>
+                    <th style="border: 1px solid #000; padding: 10px; font-weight: bold;">發文</th>
+                    <th style="border: 1px solid #000; padding: 10px; font-weight: bold;">小計</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    // 擷取 tbody 內容
+    for (let row of tbody.rows) {
+        if (row.cells.length < 4) continue;
+        html += `<tr>`;
+        for (let cell of row.cells) {
+            html += `<td style="border: 1px solid #000; padding: 8px;">${cell.textContent.trim()}</td>`;
+        }
+        html += `</tr>`;
+    }
+
+    // 擷取 tfoot 內容
+    for (let row of tfoot.rows) {
+        html += `<tr style="font-weight: bold; background-color: #f1f5f9;">`;
+        for (let cell of row.cells) {
+            html += `<td style="border: 1px solid #000; padding: 10px;">${cell.textContent.trim()}</td>`;
+        }
+        html += `</tr>`;
+    }
+
+    html += `
+            </tbody>
+        </table>
+    </div>
+    `;
+
+    // 同時建立純文字版本
+    let text = `${prefix}各部門收發文統計\n`;
+    text += `部門\t收文\t發文\t小計\n`;
+    for (let row of tbody.rows) {
+        if (row.cells.length < 4) continue;
+        text += Array.from(row.cells).map(c => c.textContent.trim()).join('\t') + '\n';
+    }
+    for (let row of tfoot.rows) {
+        text += Array.from(row.cells).map(c => c.textContent.trim()).join('\t') + '\n';
+    }
+
+    try {
+        const clipboardItem = new ClipboardItem({
+            'text/html': new Blob([html], { type: 'text/html' }),
+            'text/plain': new Blob([text], { type: 'text/plain' })
+        });
+        await navigator.clipboard.write([clipboardItem]);
+        showToast('複製成功', '真實表格已存入剪貼簿，可直接貼上 Excel、Word 或信件中');
+    } catch (err) {
+        console.error(err);
+        showToast('複製失敗', '瀏覽器拒絕存取剪貼簿，或不支援此功能', 'error');
+    }
+}
+
+async function copyChart() {
+    try {
+        const canvas = document.getElementById('deptChart');
+        if (!chartInstance) return showToast('複製失敗', '沒有圖表可複製', 'error');
+        
+        // 1. 建立一個新的暫存 Canvas
+        const tempCanvas = document.createElement('canvas');
+        const ctx = tempCanvas.getContext('2d');
+        const titleHeight = 80;
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height + titleHeight;
+        
+        // 3. 填滿純白背景
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        
+        // 4. 畫上文字標題
+        const fontSize = Math.max(22, canvas.width * 0.03); // 自動適應螢幕解析度的字體大小
+        ctx.font = `bold ${fontSize}px "Microsoft JhengHei", sans-serif`;
+        ctx.fillStyle = '#1e293b';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // 根據目前選單加上圖表類型名稱與自訂月份
+        const typeName = chartType === 'line' ? '折線圖' : '堆疊長條圖';
+        const period = getReportPeriod();
+        const prefix = period ? period + ' ' : '';
+        ctx.fillText(`${prefix}各部門收發文量分布 (${typeName})`, tempCanvas.width / 2, titleHeight / 2 + (fontSize * 0.1));
+        
+        // 5. 將原本的圖表疊加到標題下方
+        ctx.drawImage(canvas, 0, titleHeight);
+
+        // 6. 轉成圖片 Blob 並複製
+        tempCanvas.toBlob(async (blob) => {
+            try {
+                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                showToast('複製成功', '圖表已複製到剪貼簿\n(含標題與白底，可直接貼上)');
+            } catch(clipboardErr) {
+                console.error(clipboardErr);
+                showToast('複製失敗', '瀏覽器拒絕存取剪貼簿，或不支援此功能', 'error');
+            }
+        });
+    } catch (err) {
+        console.error(err);
+        showToast('複製失敗', '處理圖表時發生異常', 'error');
+    }
+}
+
+keyword.addEventListener('input', filterData);
+deptFilter.addEventListener('change', filterData);
+modeFilter.addEventListener('change', filterData);
+
+// PDF 匯出功能
+function exportToPDF() {
+    if (filteredData.length === 0) return showToast('匯出失敗', '沒有資料可供匯出 PDF 報表！', 'error');
+    
+    const period = getReportPeriod();
+    const prefix = period ? period + ' ' : '';
+    
+    // 動態修改網頁標題，讓列印存檔時自動帶入預設檔名
+    const originalTitle = document.title;
+    document.title = `${prefix}收發文統計報表`;
+    
+    // 為了避開瀏覽器對於 Local File (file://) 的 CORS 嚴格限制，
+    // 我們改用原生的 window.print() 並搭配 @media print CSS，
+    // 這樣產出的 PDF 不僅不會有空白問題，畫質與排版也更完美！
+    window.print();
+    
+    // 恢復原標題
+    setTimeout(() => {
+        document.title = originalTitle;
+    }, 1000);
+}
+
+// 拖曳上傳功能
+
+// 初始化與讀取暫存
+async function initializeApp() {
+    const loginPage = document.getElementById('loginPage');
+    const mainApp = document.getElementById('mainApp');
+    const loadingScreen = document.getElementById('loadingScreen');
+
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+        loginPage.classList.add('hidden');
+        loginPage.classList.remove('flex');
+        mainApp.classList.remove('hidden');
+    } else {
+        loginPage.classList.remove('hidden');
+        loginPage.classList.add('flex');
+        mainApp.classList.add('hidden');
+    }
+    
+    if (loadingScreen) {
+        loadingScreen.classList.remove('hidden');
+        loadingScreen.classList.add('flex');
+        loadingScreen.innerHTML = '<div class="text-white text-xl font-bold flex flex-col items-center"><div class="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mb-4"></div>正在與雲端資料庫連線...</div>';
+    }
+
+    try {
+        const cloudData = await fetchDataFromCloud();
+        if (cloudData && Array.isArray(cloudData)) {
+            data = cloudData;
+            localStorage.setItem('docData', JSON.stringify(data));
+        } else {
+            const storedData = localStorage.getItem('docData');
+            if (storedData) {
+                data = JSON.parse(storedData);
+            }
+        }
+        
+        let migrated = false;
+        data.forEach(d => {
+            if (d.dept === '水利防災部') {
+                d.dept = '水利部';
+                migrated = true;
+            }
+        });
+        if (migrated) {
+            localStorage.setItem('docData', JSON.stringify(data));
+            syncDataToCloud();
+        }
+        
+        const inInfo = localStorage.getItem('incomingInfo');
+        if (inInfo) {
+            const parsed = JSON.parse(inInfo);
+            setFileInfo('收文', parsed.filename, parsed.timeStr);
+        }
+        const outInfo = localStorage.getItem('outgoingInfo');
+        if (outInfo) {
+            const parsed = JSON.parse(outInfo);
+            setFileInfo('發文', parsed.filename, parsed.timeStr);
+        }
+    } catch(err) {
+        console.error("Initialization failed", err);
+    }
+
+    if (loadingScreen) {
+        setTimeout(() => {
+            loadingScreen.classList.add('hidden');
+            loadingScreen.classList.remove('flex');
+        }, 300);
+    }
+    init();
+}
+
+initializeApp();
+lucide.createIcons();
+
+function exportJson() {
+    if (!data || data.length === 0) {
+        return showToast('匯出失敗', '目前沒有任何資料可供匯出', 'error');
+    }
+    const dataStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    a.download = `收發文量分析資料備份_${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('匯出成功', '資料備份檔案已成功下載');
+}
+
+function importJson(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            if (!Array.isArray(importedData)) throw new Error("JSON 格式不正確");
+            const confirmResult = await Swal.fire({
+                title: '確認匯入？',
+                text: `準備匯入 ${importedData.length} 筆資料。這會「合併」到目前的資料庫中（遇到重複字號會自動跳過），確定要繼續嗎？`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '確定合併',
+                cancelButtonText: '取消'
+            });
+            if (!confirmResult.isConfirmed) {
+                event.target.value = ""; 
+                return;
+            }
+            const existingKeys = new Set(data.map(d => `${d.mode}_${d.docNo}`));
+            let added = 0;
+            importedData.forEach(d => {
+                if (d && d.mode && d.docNo) {
+                    const key = `${d.mode}_${d.docNo}`;
+                    if(!existingKeys.has(key)) {
+                        data.push(d);
+                        existingKeys.add(key);
+                        added++;
+                    }
+                }
+            });
+            localStorage.setItem('docData', JSON.stringify(data));
+            syncDataToCloud(); syncDataToCloud();
+            const now = new Date();
+            const timeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            setFileInfo('收文', 'JSON 檔案還原匯入', timeStr);
+            setFileInfo('發文', 'JSON 檔案還原匯入', timeStr);
+            init();
+            Swal.fire('匯入成功', `成功合併 ${added} 筆新資料！\n(跳過了 ${importedData.length - added} 筆重複資料)`, 'success');
+        } catch (error) {
+            console.error(error);
+            Swal.fire('匯入失敗', '讀取 JSON 檔案時發生錯誤，請確認檔案格式是否正確。', 'error');
+        } finally {
+            event.target.value = "";
+        }
+    };
+    reader.readAsText(file);
+}
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
