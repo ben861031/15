@@ -553,8 +553,18 @@ async function fetchDataFromCloud() {
             method: 'GET'
         });
         const result = await response.json();
-        if (result && result.status === 'success') {
-            return result.data;
+        if (result && result.status === 'success' && Array.isArray(result.data)) {
+            const mappedData = result.data.map(item => ({
+                mode: item['mode'] || item['收發'] || '',
+                docNo: String(item['docNo'] || item['總收發文號'] || ''),
+                docType: item['docType'] || item['文別'] || '',
+                docRef: item['docRef'] || item['來(發)文字號'] || '',
+                subject: item['subject'] || item['主旨'] || '',
+                dept: item['dept'] || item['承辦部門'] || '未分類',
+                uploadYear: parseInt(item['uploadYear'] || item['歸屬年份'], 10) || null,
+                uploadMonth: parseInt(item['uploadMonth'] || item['歸屬月份'], 10) || null
+            }));
+            return mappedData;
         }
     } catch(err) {
         console.error('Cloud fetch failed:', err);
@@ -1443,14 +1453,15 @@ async function initializeApp() {
     }
 
     try {
-        const cloudData = await fetchDataFromCloud();
-        if (cloudData && Array.isArray(cloudData)) {
-            data = cloudData;
-            localStorage.setItem('docData', JSON.stringify(data));
+        const storedData = localStorage.getItem('docData');
+        if (storedData) {
+            data = JSON.parse(storedData);
+            // Non-blocking background sync could go here, but for instant load we skip await
         } else {
-            const storedData = localStorage.getItem('docData');
-            if (storedData) {
-                data = JSON.parse(storedData);
+            const cloudData = await fetchDataFromCloud();
+            if (cloudData && Array.isArray(cloudData)) {
+                data = cloudData;
+                localStorage.setItem('docData', JSON.stringify(data));
             }
         }
         
