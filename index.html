@@ -133,15 +133,15 @@ body{
             
             <!-- 右側：上傳按鈕與登出 -->
             <div class="flex items-center gap-2">
-                <button onclick="document.getElementById('incomingFile').click()" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors text-sm font-semibold shadow-sm">
+                <button onclick="document.getElementById('incomingFile').click()" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/50 rounded-lg transition-colors text-sm font-semibold shadow-sm backdrop-blur-sm">
                     <i data-lucide="upload" class="w-4 h-4 hidden sm:block"></i>
                     <span>收文上傳</span>
                 </button>
-                <button onclick="document.getElementById('outgoingFile').click()" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors text-sm font-semibold shadow-sm">
+                <button onclick="document.getElementById('outgoingFile').click()" class="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/50 rounded-lg transition-colors text-sm font-semibold shadow-sm backdrop-blur-sm">
                     <i data-lucide="upload" class="w-4 h-4 hidden sm:block"></i>
                     <span>發文上傳</span>
                 </button>
-                <button onclick="forceSyncWithCloud()" class="ml-1 sm:ml-2 flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors text-sm font-semibold border border-blue-700 shadow-sm">
+                <button onclick="forceSyncWithCloud()" class="ml-1 sm:ml-2 flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800/50 hover:bg-slate-700/80 text-slate-300 border border-slate-600/50 rounded-lg transition-colors text-sm font-semibold shadow-sm backdrop-blur-sm">
                     <i data-lucide="refresh-cw" class="w-4 h-4 hidden sm:block"></i>
                     <span>手動同步</span>
                 </button>
@@ -248,10 +248,10 @@ body{
             <div>
                 <label class="font-semibold text-sm">資料維護</label>
                 <div class="flex gap-2 mt-2">
-                    <button onclick="checkDataAnomalies()" class="w-1/2 flex items-center justify-center bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-indigo-600">
+                    <button onclick="checkDataAnomalies()" class="w-1/2 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-indigo-700">
                         <i data-lucide="clipboard-check" class="w-4 h-4 mr-1"></i> 查核
                     </button>
-                    <button onclick="showBatchDeleteModal()" class="w-1/2 flex items-center justify-center bg-orange-500 hover:bg-orange-400 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-orange-600">
+                    <button onclick="showBatchDeleteModal()" class="w-1/2 flex items-center justify-center bg-rose-600 hover:bg-rose-500 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-rose-700">
                         <i data-lucide="folder-minus" class="w-4 h-4 mr-1"></i> 刪除
                     </button>
                 </div>
@@ -275,16 +275,16 @@ body{
                         <span class="leading-snug"><span class="dynamic-period text-slate-900 mr-1"></span>各部門收發文統計</span>
                     </h2>
                     <div class="flex items-center gap-2 flex-wrap no-print justify-end w-full" data-html2canvas-ignore="true">
-                        <button onclick="exportToPDF()" class="flex items-center bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出 PDF">
+                        <button onclick="exportToPDF()" class="flex items-center bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出 PDF">
                             <i data-lucide="file-down" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">匯出 PDF</span>
                         </button>
-                        <button onclick="copyDeptTable()" class="flex items-center bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors border border-indigo-200" title="複製表格">
+                        <button onclick="copyDeptTable()" class="flex items-center bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="複製表格">
                             <i data-lucide="copy" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">複製表格</span>
                         </button>
-                        <button onclick="exportDeptStats()" class="flex items-center bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出統計 (Excel)">
+                        <button onclick="exportDeptStats()" class="flex items-center bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出統計 (Excel)">
                             <i data-lucide="download" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">匯出統計</span>
                         </button>
-                        <button onclick="exportAnnualMonthlyReport()" class="flex items-center bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出年度月報表 (Excel)">
+                        <button onclick="exportAnnualMonthlyReport()" class="flex items-center bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出年度月報表 (Excel)">
                             <i data-lucide="table-2" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">年度月報表</span>
                         </button>
                     </div>
@@ -318,7 +318,7 @@ body{
                             <button onclick="changeChartType('line')" id="btnLine" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all">折線圖</button>
                             <button onclick="changeChartType('pie')" id="btnPie" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all">圓餅圖</button>
                         </div>
-                        <button onclick="copyChart()" class="flex items-center bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors border border-indigo-200" title="複製圖表">
+                        <button onclick="copyChart()" class="flex items-center bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="複製圖表">
                             <i data-lucide="copy" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">複製圖表</span>
                         </button>
                     </div>
@@ -444,8 +444,10 @@ async function handleLogin() {
     btn.disabled = true;
 
     try {
-        const response = await fetch(`${GAS_URL}?action=login&id=${encodeURIComponent(id)}&pwd=${encodeURIComponent(pwd)}`);
+        const response = await fetch(`${GAS_URL}?action=login&id=${encodeURIComponent(id)}&pwd=${encodeURIComponent(pwd)}&_t=${Date.now()}`);
         const result = await response.json();
+        
+        console.log("Login API Response:", result);
         
         if (result.status === 'success') {
             document.getElementById('loginPage').classList.add('hidden');
