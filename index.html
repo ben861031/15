@@ -563,7 +563,7 @@ async function syncDataToCloud() {
         await fetch(GAS_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'syncData', data: data })
+            body: JSON.stringify({ action: 'overwriteData', data: data })
         });
     } catch (err) {
         console.error('Auto sync failed:', err);
@@ -791,36 +791,69 @@ async function autoFixDataAnomalies() {
 }
 
 async function forceSyncWithCloud() {
-    Swal.fire({
-        title: '正在與雲端同步資料...',
-        html: '請稍候，系統正在從 Google Sheets 下載最新資料。',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
+    const result = await Swal.fire({
+        title: '請選擇同步方向',
+        html: '您希望從雲端下載最新資料，還是將目前網頁的資料強制覆蓋到雲端？<br><br><span class="text-xs text-red-500 font-bold">⚠️ 如果您確定目前網頁上的數字是準確的，請選擇「強制覆蓋雲端」來修復資料庫。</span>',
+        icon: 'question',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: '⬇️ 從雲端下載',
+        denyButtonText: '⬆️ 強制覆蓋雲端',
+        cancelButtonText: '取消',
+        confirmButtonColor: '#3b82f6',
+        denyButtonColor: '#ef4444',
     });
 
-    try {
-        const cloudData = await fetchDataFromCloud();
-        if (cloudData && Array.isArray(cloudData)) {
-            data = deduplicateData(cloudData);
-            localStorage.setItem('docData', JSON.stringify(data));
-            updateOverviewStats();
-            renderFilters();
-            filterData();
-            
-            // 重新初始化 lucide 圖示
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
+    if (result.isConfirmed) {
+        Swal.fire({
+            title: '正在從雲端下載資料...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
             }
-            
-            Swal.fire('同步完成！', '已成功與雲端資料庫保持最新同步。', 'success');
-        } else {
-            Swal.fire('同步失敗', '從雲端獲取資料失敗，請確認網路連線。', 'error');
+        });
+        try {
+            const cloudData = await fetchDataFromCloud();
+            if (cloudData && Array.isArray(cloudData)) {
+                data = deduplicateData(cloudData);
+                localStorage.setItem('docData', JSON.stringify(data));
+                updateOverviewStats();
+                renderFilters();
+                filterData();
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+                Swal.fire('下載完成！', '已成功取得雲端最新資料。', 'success');
+            } else {
+                Swal.fire('下載失敗', '從雲端獲取資料失敗，請確認網路連線。', 'error');
+            }
+        } catch(err) {
+            console.error(err);
+            Swal.fire('同步異常', '發生未預期的錯誤，請稍後再試。', 'error');
         }
-    } catch(err) {
-        console.error(err);
-        Swal.fire('同步異常', '發生未預期的錯誤，請稍後再試。', 'error');
+    } else if (result.isDenied) {
+        Swal.fire({
+            title: '正在強制覆蓋雲端...',
+            html: '系統正在將網頁資料上傳，完全覆蓋 Google Sheets...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        try {
+            data = deduplicateData(data);
+            localStorage.setItem('docData', JSON.stringify(data));
+            
+            await fetch(GAS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'overwriteData', data: data })
+            });
+            Swal.fire('覆蓋完成！', '太棒了！雲端資料庫已經完全與您目前的網頁同步，誤差為 0！', 'success');
+        } catch(err) {
+            console.error(err);
+            Swal.fire('同步異常', '無法覆蓋雲端資料，請確認網路連線。', 'error');
+        }
     }
 }
 
