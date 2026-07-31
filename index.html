@@ -141,15 +141,6 @@ body{
                     <i data-lucide="upload" class="w-4 h-4 hidden sm:block"></i>
                     <span>發文上傳</span>
                 </button>
-                
-                <button onclick="checkDataAnomalies()" class="ml-1 sm:ml-2 flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-lg transition-colors text-sm font-semibold border border-indigo-600 shadow-sm">
-                    <i data-lucide="stethoscope" class="w-4 h-4 hidden sm:block"></i>
-                    <span>資料健檢</span>
-                </button>
-                <button onclick="showBatchDeleteModal()" class="ml-1 sm:ml-2 flex items-center gap-1.5 px-3.5 py-1.5 bg-orange-500 hover:bg-orange-400 text-white rounded-lg transition-colors text-sm font-semibold border border-orange-600 shadow-sm">
-                    <i data-lucide="folder-minus" class="w-4 h-4 hidden sm:block"></i>
-                    <span>批次刪除</span>
-                </button>
                 <button onclick="forceSyncWithCloud()" class="ml-1 sm:ml-2 flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors text-sm font-semibold border border-blue-700 shadow-sm">
                     <i data-lucide="refresh-cw" class="w-4 h-4 hidden sm:block"></i>
                     <span>手動同步</span>
@@ -193,7 +184,7 @@ body{
 
     <!-- 篩選與匯出區塊 -->
     <div class="bg-white rounded-3xl shadow p-5 mb-6 no-print">
-        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
                 <label class="font-semibold text-sm">報表月份</label>
                 <div class="flex gap-2 mt-2">
@@ -224,10 +215,7 @@ body{
                     </select>
                 </div>
             </div>
-            <div>
-                <label class="font-semibold text-sm">關鍵字搜尋</label>
-                <input id="keyword" type="text" placeholder="搜尋主旨、字號..." class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
+
             <div>
                 <label class="font-semibold text-sm">部門篩選</label>
                 <select id="deptFilter" class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -243,7 +231,18 @@ body{
                 </select>
             </div>
             <div>
-                <label class="font-semibold text-sm invisible">操作</label>
+                <label class="font-semibold text-sm">資料維護</label>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="checkDataAnomalies()" class="w-1/2 flex items-center justify-center bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-indigo-600">
+                        <i data-lucide="clipboard-check" class="w-4 h-4 mr-1"></i> 查核
+                    </button>
+                    <button onclick="showBatchDeleteModal()" class="w-1/2 flex items-center justify-center bg-orange-500 hover:bg-orange-400 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-orange-600">
+                        <i data-lucide="folder-minus" class="w-4 h-4 mr-1"></i> 刪除
+                    </button>
+                </div>
+            </div>
+            <div>
+                <label class="font-semibold text-sm">報表輸出</label>
                 <button onclick="exportEmailReport()" class="mt-2 w-full flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-emerald-600">
                     <i data-lucide="mail" class="w-4 h-4 mr-1"></i> 主管信件
                 </button>
@@ -302,6 +301,7 @@ body{
                         <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
                             <button onclick="changeChartType('stackedBar')" id="btnBar" class="px-3 py-1.5 rounded-lg bg-white shadow-sm text-sm font-bold text-slate-700 transition-all">長條圖</button>
                             <button onclick="changeChartType('line')" id="btnLine" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all">折線圖</button>
+                            <button onclick="changeChartType('pie')" id="btnPie" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all">圓餅圖</button>
                         </div>
                         <button onclick="copyChart()" class="flex items-center bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors border border-indigo-200" title="複製圖表">
                             <i data-lucide="copy" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">複製圖表</span>
@@ -461,17 +461,18 @@ function changeChartType(type) {
     chartType = type;
     const btnBar = document.getElementById('btnBar');
     const btnLine = document.getElementById('btnLine');
-    if (type === 'stackedBar') {
-        btnBar.className = 'px-3 py-1.5 rounded-lg bg-white shadow-sm text-sm font-bold text-slate-700 transition-all';
-        btnLine.className = 'px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all';
-    } else {
-        btnLine.className = 'px-3 py-1.5 rounded-lg bg-white shadow-sm text-sm font-bold text-slate-700 transition-all';
-        btnBar.className = 'px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all';
-    }
+    const btnPie = document.getElementById('btnPie');
+    
+    const activeClass = 'px-3 py-1.5 rounded-lg bg-white shadow-sm text-sm font-bold text-slate-700 transition-all';
+    const inactiveClass = 'px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all';
+    
+    if (btnBar) btnBar.className = type === 'stackedBar' ? activeClass : inactiveClass;
+    if (btnLine) btnLine.className = type === 'line' ? activeClass : inactiveClass;
+    if (btnPie) btnPie.className = type === 'pie' ? activeClass : inactiveClass;
+    
     renderDeptStatsAndChart();
 }
 
-const keyword = document.getElementById('keyword');
 const deptFilter = document.getElementById('deptFilter');
 const modeFilter = document.getElementById('modeFilter');
 const reportYear = document.getElementById('reportYear');
@@ -534,7 +535,6 @@ function resetData() {
 
 
 
-        keyword.value = '';
         modeFilter.value = '';
         deptFilter.value = '';
         init();
@@ -662,20 +662,26 @@ async function showBatchDeleteModal() {
         renderFilters();
         filterData();
 
-        showToast('🗑️ 刪除成功', `已成功刪除 ${deletedCount} 筆公文，正在同步覆蓋雲端...`, 'success');
-        
         if (GAS_URL) {
+            Swal.fire({
+                title: '正在同步至雲端...',
+                html: `已刪除 ${deletedCount} 筆公文，正在覆蓋雲端資料庫...`,
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
             try {
                 await fetch(GAS_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: 'overwriteData', data: data })
                 });
-                showToast('✅ 同步完成', `雲端資料已成功覆蓋更新`, 'success');
+                Swal.fire('✅ 刪除與同步完成', `已成功刪除 ${deletedCount} 筆公文並更新雲端`, 'success');
             } catch(e) {
                 console.error(e);
-                showToast('❌ 同步失敗', `無法連線至雲端，但本機已刪除`, 'error');
+                Swal.fire('❌ 同步失敗', `本機已刪除，但無法連線至雲端`, 'error');
             }
+        } else {
+             Swal.fire('✅ 刪除完成', `已成功刪除 ${deletedCount} 筆公文`, 'success');
         }
     }
 }
@@ -775,6 +781,12 @@ async function autoFixDataAnomalies() {
     filterData();
 
     if (GAS_URL) {
+        Swal.fire({
+            title: '正在同步修復結果...',
+            html: `已剔除 ${removedCount} 筆重複資料，正在覆蓋雲端資料庫...`,
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
         try {
             await fetch(GAS_URL, {
                 method: 'POST',
@@ -944,71 +956,97 @@ async function handleFile(e, mode, filename) {
     if (!formValues) return;
     const { year, month } = formValues;
 
-    const reader = new FileReader();
-    reader.onload = function(event) {
-        try {
-            const workbook = XLSX.read(event.target.result, { type: 'binary' });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const raw = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    Swal.fire({
+        title: `正在解析 ${mode} Excel...`,
+        html: '資料處理中，請稍候...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+            setTimeout(() => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const workbook = XLSX.read(event.target.result, { type: 'binary' });
+                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const raw = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
-            const existingKeys = new Set(data.map(d => `${d.mode}_${d.docNo}`));
-            let addedCount = 0;
-            let duplicateCount = 0;
+                        const existingKeys = new Set(data.map(d => `${d.mode}_${d.docNo}`));
+                        let addedCount = 0;
+                        let duplicateCount = 0;
+                        let skippedUCount = 0;
 
-            for (let i = 0; i < raw.length; i++) {
-                const row = raw[i];
-                const docNo = String(row['總收發文號'] || '').trim();
-                
-                if (docNo !== '') {
-                    const nextRow = (i + 1 < raw.length && !raw[i+1]['總收發文號']) ? raw[i+1] : {};
-                    let topRef = excelDateToJSDate(row['來(發)文字號'] || '');
-                    let bottomRef = excelDateToJSDate(nextRow['來(發)文字號'] || '');
+                        for (let i = 0; i < raw.length; i++) {
+                            const row = raw[i];
+                            const docNo = String(row['總收發文號'] || '').trim();
+                            
+                            if (docNo !== '') {
+                                // 如果是收文，且第4碼為'U'，則不計入(跳過)
+                                if (mode === '收文' && docNo.charAt(3) === 'U') {
+                                    skippedUCount++;
+                                    continue;
+                                }
 
-                    let parsedDept = String(row['承辦部門'] || row['承辦單位'] || '未分類').trim();
-                    if (parsedDept === '水利防災部') parsedDept = '水利部';
+                                const nextRow = (i + 1 < raw.length && !raw[i+1]['總收發文號']) ? raw[i+1] : {};
+                                let topRef = excelDateToJSDate(row['來(發)文字號'] || '');
+                                let bottomRef = excelDateToJSDate(nextRow['來(發)文字號'] || '');
 
-                    const key = `${mode}_${docNo}`;
-                    if (existingKeys.has(key)) {
-                        duplicateCount++;
-                        continue;
+                                let parsedDept = String(row['承辦部門'] || row['承辦單位'] || '未分類').trim();
+                                if (parsedDept === '水利防災部') parsedDept = '水利部';
+
+                                const key = `${mode}_${docNo}`;
+                                if (existingKeys.has(key)) {
+                                    duplicateCount++;
+                                    continue;
+                                }
+
+                                const now = new Date();
+                                const importTimeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+
+                                data.push({
+                                    mode: mode,
+                                    docNo: docNo,
+                                    docType: String(row['文別'] || ''),
+                                    docRef: `${topRef} ${bottomRef}`.trim(),
+                                    subject: String(row['主旨'] || row['公文主旨'] || ''),
+                                    dept: parsedDept,
+                                    uploadYear: year,
+                                    uploadMonth: month,
+                                    importTime: importTimeStr
+                                });
+                                
+                                existingKeys.add(key);
+                                addedCount++;
+                            }
+                        }
+                        
+                        localStorage.setItem('docData', JSON.stringify(data));
+                        syncDataToCloud();
+                        const now = new Date();
+                        const timeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+                        
+                        setFileInfo(mode, `最新匯入: ${filename} (${year}年${month}月)`, timeStr);
+                        
+                        let msg = `已成功新增 ${addedCount} 筆資料`;
+                        if (duplicateCount > 0 || skippedUCount > 0) {
+                            msg = `新增 ${addedCount} 筆資料`;
+                            if (duplicateCount > 0) msg += `\n(忽略 ${duplicateCount} 筆重複)`;
+                            if (skippedUCount > 0) msg += `\n(跳過 ${skippedUCount} 筆 U 字軌部門收文)`;
+                        }
+                        
+                        Swal.close();
+                        showToast('匯入完成', msg, 'success');
+                        
+                        init();
+                    } catch(err) {
+                        Swal.close();
+                        showToast('讀取失敗', '請確認檔案格式是否正確', 'error');
+                        console.error(err);
                     }
-
-                    data.push({
-                        mode: mode,
-                        docNo: docNo,
-                        docType: String(row['文別'] || ''),
-                        docRef: `${topRef} ${bottomRef}`.trim(),
-                        subject: String(row['主旨'] || row['公文主旨'] || ''),
-                        dept: parsedDept,
-                        uploadYear: year,
-                        uploadMonth: month
-                    });
-                    
-                    existingKeys.add(key);
-                    addedCount++;
-                }
-            }
-            
-            localStorage.setItem('docData', JSON.stringify(data));
-            syncDataToCloud();
-            const now = new Date();
-            const timeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
-            
-            setFileInfo(mode, `最新匯入: ${filename} (${year}年${month}月)`, timeStr);
-            
-            if (duplicateCount > 0) {
-                showToast('匯入完成', `新增 ${addedCount} 筆資料\n(已自動忽略 ${duplicateCount} 筆重複公文)`, 'success');
-            } else {
-                showToast('匯入完成', `已成功新增 ${addedCount} 筆資料`, 'success');
-            }
-            
-            init();
-        } catch(err) {
-            showToast('讀取失敗', '請確認檔案格式是否正確', 'error');
-            console.error(err);
+                };
+                reader.readAsBinaryString(file);
+            }, 100);
         }
-    };
-    reader.readAsBinaryString(file);
+    });
 }
 
 function init() {
@@ -1019,12 +1057,11 @@ function init() {
 
 function updateOverviewStats() {
     // 判斷目前是否有啟用任何篩選條件
-    const keywordVal = document.getElementById('keyword')?.value;
     const deptVal = document.getElementById('deptFilter')?.value;
     const modeVal = document.getElementById('modeFilter')?.value;
     const yearVal = document.getElementById('reportYear')?.value;
     const monthVal = document.getElementById('reportMonth')?.value;
-    const isFiltered = keywordVal || deptVal || modeVal || yearVal || monthVal;
+    const isFiltered = deptVal || modeVal || yearVal || monthVal;
 
     // 如果有篩選，就顯示篩選後的數字；如果沒有篩選，就顯示全部總數
     const targetData = isFiltered ? filteredData : data;
@@ -1049,7 +1086,6 @@ function renderFilters() {
 }
 
 function filterData() {
-    const key = keyword.value.toLowerCase();
     const dept = deptFilter.value;
     const mode = modeFilter.value;
     const yearVal = document.getElementById('reportYear').value;
@@ -1059,10 +1095,9 @@ function filterData() {
     let targetMonth = monthVal ? parseInt(monthVal.replace('月份', ''), 10) : null;
 
     filteredData = data.filter(item => {
-        const text = `${item.docNo} ${item.docType} ${item.docRef} ${item.subject} ${item.dept} ${item.mode}`.toLowerCase();
         let matchYear = targetYear !== null ? (item.uploadYear === targetYear || item.uploadYear === targetYear + 1911) : true;
         let matchMonth = targetMonth !== null ? (item.uploadMonth === targetMonth) : true;
-        return text.includes(key) && (!dept || item.dept === dept) && (!mode || item.mode === mode) && matchYear && matchMonth;
+        return (!dept || item.dept === dept) && (!mode || item.mode === mode) && matchYear && matchMonth;
     });
 
     updateOverviewStats();
@@ -1122,25 +1157,49 @@ function renderChart(sortedStats) {
     const labels = topDepts.map(s => s[0]);
     const incomingData = topDepts.map(s => s[1].incoming);
     const outgoingData = topDepts.map(s => s[1].outgoing);
+    const totalData = topDepts.map(s => s[1].incoming + s[1].outgoing);
     const isStacked = chartType === 'stackedBar';
-    const configType = chartType === 'line' ? 'line' : 'bar';
+    const configType = chartType === 'line' ? 'line' : (chartType === 'pie' ? 'doughnut' : 'bar');
 
     const ctx = document.getElementById('deptChart').getContext('2d');
     if (chartInstance) chartInstance.destroy();
 
+    let datasets = [];
+    if (chartType === 'pie') {
+        datasets = [{
+            label: '總數量',
+            data: totalData,
+            backgroundColor: [
+                'rgba(59, 130, 246, 0.8)', 'rgba(16, 185, 129, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(239, 68, 68, 0.8)', 'rgba(139, 92, 246, 0.8)',
+                'rgba(6, 182, 212, 0.8)', 'rgba(249, 115, 22, 0.8)', 'rgba(236, 72, 153, 0.8)', 'rgba(132, 204, 22, 0.8)', 'rgba(20, 184, 166, 0.8)',
+                'rgba(99, 102, 241, 0.8)', 'rgba(244, 63, 94, 0.8)', 'rgba(234, 179, 8, 0.8)', 'rgba(34, 197, 94, 0.8)', 'rgba(168, 85, 247, 0.8)'
+            ],
+            borderWidth: 1
+        }];
+    } else {
+        datasets = [
+            { label: '收文', data: incomingData, backgroundColor: 'rgba(59, 130, 246, 0.8)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: chartType === 'line' ? 3 : 0, borderRadius: 4, tension: 0.3, fill: false },
+            { label: '發文', data: outgoingData, backgroundColor: 'rgba(16, 185, 129, 0.8)', borderColor: 'rgba(16, 185, 129, 1)', borderWidth: chartType === 'line' ? 3 : 0, borderRadius: 4, tension: 0.3, fill: false }
+        ];
+    }
+
+    let options = {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+            legend: { position: chartType === 'pie' ? 'right' : 'top' }
+        }
+    };
+
+    if (chartType !== 'pie') {
+        options.scales = { x: { stacked: isStacked }, y: { stacked: isStacked, beginAtZero: true } };
+    } else {
+        options.cutout = '50%'; // Make it a doughnut chart
+    }
+
     chartInstance = new Chart(ctx, {
         type: configType,
-        data: {
-            labels: labels,
-            datasets: [
-                { label: '收文', data: incomingData, backgroundColor: 'rgba(59, 130, 246, 0.8)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: chartType === 'line' ? 3 : 0, borderRadius: 4, tension: 0.3, fill: false },
-                { label: '發文', data: outgoingData, backgroundColor: 'rgba(16, 185, 129, 0.8)', borderColor: 'rgba(16, 185, 129, 1)', borderWidth: chartType === 'line' ? 3 : 0, borderRadius: 4, tension: 0.3, fill: false }
-            ]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            scales: { x: { stacked: isStacked }, y: { stacked: isStacked, beginAtZero: true } }
-        }
+        data: { labels: labels, datasets: datasets },
+        options: options
     });
 }
 
@@ -1706,7 +1765,6 @@ async function copyChart() {
     }
 }
 
-keyword.addEventListener('input', filterData);
 deptFilter.addEventListener('change', filterData);
 modeFilter.addEventListener('change', filterData);
 
