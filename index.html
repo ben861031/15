@@ -85,7 +85,7 @@ body{
         <div class="w-full space-y-4 z-10">
             <input type="text" id="empId" placeholder="員工編號" class="w-full border border-slate-200 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-400">
             <input type="password" id="empPwd" placeholder="密碼" class="w-full border border-slate-200 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-400" onkeypress="if(event.key === 'Enter') handleLogin()">
-            <button onclick="handleLogin()" class="w-full bg-[#4f70f8] hover:bg-indigo-600 text-white rounded-full py-3 text-sm font-semibold shadow-md shadow-indigo-200 transition-all mt-4 transform hover:scale-[1.02] active:scale-95">登入</button>
+            <button onclick="handleLogin()" class="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-full py-3 text-sm font-semibold shadow-md shadow-blue-200 transition-all mt-4 transform hover:scale-[1.02] active:scale-95">登入</button>
         </div>
     </div>
 </div>
@@ -110,14 +110,14 @@ body{
                     <!-- Hover Dropdown Menu -->
                     <div class="absolute left-0 mt-3 w-48 bg-white rounded-xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 origin-top-left">
                         <div class="p-1.5 text-slate-800">
-                            <button onclick="openMailSettings()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors">
+                            <button onclick="openMailSettings()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
                                 <i data-lucide="mail" class="w-4 h-4 mr-2.5"></i> 信件設定
                             </button>
                             <div class="h-px bg-slate-100 my-1 mx-2"></div>
-                            <button onclick="exportJson()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors">
+                            <button onclick="exportJson()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
                                 <i data-lucide="download" class="w-4 h-4 mr-2.5"></i> 匯出備份 (JSON)
                             </button>
-                            <button onclick="document.getElementById('jsonFileInput').click()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors">
+                            <button onclick="document.getElementById('jsonFileInput').click()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
                                 <i data-lucide="upload" class="w-4 h-4 mr-2.5"></i> 匯入還原 (JSON)
                             </button>
                             <div class="h-px bg-slate-100 my-1 mx-2"></div>
@@ -244,17 +244,17 @@ body{
             <div>
                 <label class="font-semibold text-sm">資料維護</label>
                 <div class="flex gap-2 mt-2">
-                    <button onclick="checkDataAnomalies()" class="w-1/2 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-indigo-700">
+                    <button onclick="checkDataAnomalies()" class="w-1/2 flex items-center justify-center bg-sky-600 hover:bg-sky-700 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-sky-600">
                         <i data-lucide="clipboard-check" class="w-4 h-4 mr-1"></i> 查核
                     </button>
-                    <button onclick="showBatchDeleteModal()" class="w-1/2 flex items-center justify-center bg-rose-600 hover:bg-rose-500 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-rose-700">
+                    <button onclick="showBatchDeleteModal()" class="w-1/2 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-red-500">
                         <i data-lucide="folder-minus" class="w-4 h-4 mr-1"></i> 刪除
                     </button>
                 </div>
             </div>
             <div>
                 <label class="font-semibold text-sm">報表輸出</label>
-                <button onclick="exportEmailReport()" class="mt-2 w-full flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-emerald-600">
+                <button onclick="exportEmailReport()" class="mt-2 w-full flex items-center justify-center bg-teal-600 hover:bg-teal-700 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-teal-600">
                     <i data-lucide="mail" class="w-4 h-4 mr-1"></i> 主管信件
                 </button>
             </div>
@@ -271,16 +271,16 @@ body{
                         <span class="leading-snug"><span class="dynamic-period text-slate-900 mr-1"></span>各部門收發文統計</span>
                     </h2>
                     <div class="flex items-center gap-2 flex-wrap no-print justify-end w-full" data-html2canvas-ignore="true">
-                        <button onclick="exportToPDF()" class="flex items-center bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出 PDF">
+                        <button onclick="exportToPDF()" class="flex items-center bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出 PDF">
                             <i data-lucide="file-down" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">匯出 PDF</span>
                         </button>
-                        <button onclick="copyDeptTable()" class="flex items-center bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="複製表格">
+                        <button onclick="copyDeptTable()" class="flex items-center bg-slate-500 hover:bg-slate-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="複製表格">
                             <i data-lucide="copy" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">複製表格</span>
                         </button>
-                        <button onclick="exportDeptStats()" class="flex items-center bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出統計 (Excel)">
+                        <button onclick="exportDeptStats()" class="flex items-center bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出統計 (Excel)">
                             <i data-lucide="download" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">匯出統計</span>
                         </button>
-                        <button onclick="exportAnnualMonthlyReport()" class="flex items-center bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出年度月報表 (Excel)">
+                        <button onclick="exportAnnualMonthlyReport()" class="flex items-center bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出年度月報表 (Excel)">
                             <i data-lucide="table-2" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">年度月報表</span>
                         </button>
                     </div>
@@ -314,7 +314,7 @@ body{
                             <button onclick="changeChartType('line')" id="btnLine" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all">折線圖</button>
                             <button onclick="changeChartType('pie')" id="btnPie" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all">圓餅圖</button>
                         </div>
-                        <button onclick="copyChart()" class="flex items-center bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="複製圖表">
+                        <button onclick="copyChart()" class="flex items-center bg-slate-500 hover:bg-slate-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="複製圖表">
                             <i data-lucide="copy" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">複製圖表</span>
                         </button>
                     </div>
@@ -365,7 +365,7 @@ body{
             <button onclick="closeMailSettings()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-200 transition-colors">
                 取消
             </button>
-            <button onclick="saveMailSettings()" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-colors flex items-center gap-2">
+            <button onclick="saveMailSettings()" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 shadow-sm transition-colors flex items-center gap-2">
                 <i data-lucide="save" class="w-4 h-4"></i> 儲存設定
             </button>
         </div>
