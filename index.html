@@ -586,7 +586,8 @@ async function fetchDataFromCloud() {
                 subject: item['subject'] || item['主旨'] || '',
                 dept: item['dept'] || item['承辦部門'] || '未分類',
                 uploadYear: parseInt(item['uploadYear'] || item['歸屬年份'], 10) || null,
-                uploadMonth: parseInt(item['uploadMonth'] || item['歸屬月份'], 10) || null
+                uploadMonth: parseInt(item['uploadMonth'] || item['歸屬月份'], 10) || null,
+                importTime: item['importTime'] || item['匯入時間'] || ''
             }));
             return mappedData;
         }
