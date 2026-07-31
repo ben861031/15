@@ -145,10 +145,25 @@ body{
                     <i data-lucide="refresh-cw" class="w-4 h-4 hidden sm:block"></i>
                     <span>手動同步</span>
                 </button>
-                <button onclick="logout()" class="ml-1 sm:ml-2 flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-lg transition-colors text-sm font-semibold border border-slate-700">
-                    <i data-lucide="log-out" class="w-4 h-4 hidden sm:block"></i>
-                    <span>登出</span>
-                </button>
+                
+                <!-- 使用者個人檔案下拉選單 -->
+                <div class="relative group hidden sm:block ml-1 sm:ml-2">
+                    <button class="flex items-center gap-2 px-3 py-1.5 text-slate-300 hover:text-white transition-colors font-medium text-sm rounded-lg hover:bg-slate-800 border border-transparent hover:border-slate-700">
+                        <div class="bg-indigo-500/20 text-indigo-300 rounded-full w-6 h-6 flex items-center justify-center">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                        </div>
+                        <span id="navUserName">載入中...</span>
+                        <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5 opacity-70"></i>
+                    </button>
+                    <!-- Hover Dropdown Menu -->
+                    <div class="absolute right-0 mt-3 w-40 bg-white rounded-xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 origin-top-right">
+                        <div class="p-1.5 text-slate-800">
+                            <button onclick="logout()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors font-medium">
+                                <i data-lucide="log-out" class="w-4 h-4 mr-2.5"></i> 登出系統
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 
                 <input type="file" id="incomingFile" accept=".xlsx,.xls" class="hidden">
                 <input type="file" id="outgoingFile" accept=".xlsx,.xls" class="hidden">
@@ -437,6 +452,15 @@ async function handleLogin() {
             document.getElementById('loginPage').classList.remove('flex');
             document.getElementById('mainApp').classList.remove('hidden');
             localStorage.setItem('isLoggedIn', 'true');
+            if (result.dept && result.name) {
+                localStorage.setItem('userDept', result.dept);
+                localStorage.setItem('userName', result.name);
+                const navUserName = document.getElementById('navUserName');
+                if (navUserName) navUserName.textContent = `${result.dept} ${result.name}`;
+            } else {
+                const navUserName = document.getElementById('navUserName');
+                if (navUserName) navUserName.textContent = `使用者`;
+            }
             showToast('登入成功', result.message, 'success');
             // 本機模式，維持原有的拖曳上傳與暫存邏輯
             // 不自動同步雲端資料
@@ -872,6 +896,8 @@ async function forceSyncWithCloud() {
 
 function logout() {
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userDept');
+    localStorage.removeItem('userName');
     location.reload();
 }
 
@@ -1802,6 +1828,14 @@ async function initializeApp() {
         loginPage.classList.add('hidden');
         loginPage.classList.remove('flex');
         mainApp.classList.remove('hidden');
+        const dept = localStorage.getItem('userDept');
+        const name = localStorage.getItem('userName');
+        const navUserName = document.getElementById('navUserName');
+        if (dept && name) {
+            if (navUserName) navUserName.textContent = `${dept} ${name}`;
+        } else {
+            if (navUserName) navUserName.textContent = `使用者`;
+        }
     } else {
         loginPage.classList.remove('hidden');
         loginPage.classList.add('flex');
