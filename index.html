@@ -93,21 +93,19 @@ body{
 <!-- 系統上方導覽列 -->
 <nav class="bg-[#14a9a8] text-white shadow-md sticky top-0 z-50 no-print">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
+        <div class="flex justify-between items-center h-14">
             <!-- 左側：Logo與系統名稱及選單 -->
-            <div class="flex items-center gap-3 sm:gap-4">
+            <div class="flex items-center gap-5 sm:gap-8">
                 <div class="flex items-center gap-2">
-                    <i data-lucide="bar-chart-2" class="w-5 h-5 text-white"></i>
-                    <span class="text-lg font-bold tracking-wide">收發文量分析平台</span>
+                    <i data-lucide="bar-chart-2" class="w-[22px] h-[22px] text-white"></i>
+                    <span class="text-[20px] font-normal tracking-wide">收發文量分析平台</span>
                 </div>
-                
-                <div class="w-px h-5 bg-white/20 hidden sm:block"></div>
                 
                 <!-- 進階功能下拉選單 -->
                 <div class="relative group hidden sm:block">
-                    <button class="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors font-medium text-sm">
+                    <button class="flex items-center gap-1 text-white/80 hover:text-white transition-colors font-normal text-[15px]">
                         <span>系統選單</span>
-                        <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5"></i>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 ml-0.5"></i>
                     </button>
                     <!-- Hover Dropdown Menu -->
                     <div class="absolute left-0 mt-3 w-48 bg-white rounded-xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 origin-top-left">
@@ -132,26 +130,26 @@ body{
             </div>
             
             <!-- 右側：上傳按鈕與登出 -->
-            <div class="flex items-center gap-2">
-                <button onclick="document.getElementById('incomingFile').click()" class="flex items-center gap-1.5 px-3 py-1.5 text-white/90 hover:text-white transition-colors text-sm font-medium">
-                    <i data-lucide="upload" class="w-4 h-4 hidden sm:block"></i>
+            <div class="flex items-center gap-1.5 sm:gap-4">
+                <button onclick="document.getElementById('incomingFile').click()" class="flex items-center gap-1.5 px-2 py-1 text-white/80 hover:text-white transition-colors text-[15px] font-normal">
+                    <i data-lucide="upload" class="w-[18px] h-[18px] hidden sm:block"></i>
                     <span>收文上傳</span>
                 </button>
-                <button onclick="document.getElementById('outgoingFile').click()" class="flex items-center gap-1.5 px-3 py-1.5 text-white/90 hover:text-white transition-colors text-sm font-medium">
-                    <i data-lucide="upload" class="w-4 h-4 hidden sm:block"></i>
+                <button onclick="document.getElementById('outgoingFile').click()" class="flex items-center gap-1.5 px-2 py-1 text-white/80 hover:text-white transition-colors text-[15px] font-normal">
+                    <i data-lucide="upload" class="w-[18px] h-[18px] hidden sm:block"></i>
                     <span>發文上傳</span>
                 </button>
-                <button onclick="forceSyncWithCloud()" class="ml-1 sm:ml-2 flex items-center gap-1.5 px-3 py-1.5 text-white/90 hover:text-white transition-colors text-sm font-medium">
-                    <i data-lucide="refresh-cw" class="w-4 h-4 hidden sm:block"></i>
+                <button onclick="forceSyncWithCloud()" class="flex items-center gap-1.5 px-2 py-1 text-white/80 hover:text-white transition-colors text-[15px] font-normal">
+                    <i data-lucide="refresh-cw" class="w-[18px] h-[18px] hidden sm:block"></i>
                     <span>手動同步</span>
                 </button>
                 
                 <!-- 使用者個人檔案下拉選單 -->
-                <div class="relative group hidden sm:block ml-1 sm:ml-2">
-                    <button class="flex items-center gap-1.5 px-3 py-1.5 text-white/90 hover:text-white transition-colors font-medium text-sm">
-                        <i data-lucide="user" class="w-4 h-4"></i>
+                <div class="relative group hidden sm:block">
+                    <button class="flex items-center gap-1.5 px-2 py-1 text-white/90 hover:text-white transition-colors font-normal text-[15px]">
+                        <i data-lucide="user" class="w-[18px] h-[18px]"></i>
                         <span id="navUserName">載入中...</span>
-                        <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5 opacity-70"></i>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 ml-0.5 opacity-70"></i>
                     </button>
                     <!-- Hover Dropdown Menu -->
                     <div class="absolute right-0 mt-3 w-40 bg-white rounded-xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 origin-top-right">
