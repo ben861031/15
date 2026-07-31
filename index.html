@@ -542,8 +542,24 @@ function resetData() {
     }
 }
 
+function deduplicateData(dataArray) {
+    if (!Array.isArray(dataArray)) return [];
+    const seen = new Set();
+    return dataArray.filter(item => {
+        if (!item || !item.docNo) return false;
+        const key = `${item.mode}_${String(item.docNo).trim()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
 async function syncDataToCloud() {
     try {
+        // 同步前強制再次去重，確保不將重複資料推上雲端
+        data = deduplicateData(data);
+        localStorage.setItem('docData', JSON.stringify(data));
+
         await fetch(GAS_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -787,7 +803,7 @@ async function forceSyncWithCloud() {
     try {
         const cloudData = await fetchDataFromCloud();
         if (cloudData && Array.isArray(cloudData)) {
-            data = cloudData;
+            data = deduplicateData(cloudData);
             localStorage.setItem('docData', JSON.stringify(data));
             updateOverviewStats();
             renderFilters();
@@ -940,7 +956,7 @@ async function handleFile(e, mode, filename) {
             }
             
             localStorage.setItem('docData', JSON.stringify(data));
-            syncDataToCloud(); syncDataToCloud();
+            syncDataToCloud();
             const now = new Date();
             const timeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
             
@@ -1245,7 +1261,7 @@ function exportAnnualMonthlyReport() {
         );
         
         rowSubTotal.push({ t: 'n', v: inSum + outSum, f: `${inColLetter}${endRow+1}+${outColLetter}${endRow+1}` });
-        rowSubTotal.push(""); // for merge
+        rowSubTotal.push(""); // 預留合併
 
         totalInCols.push(`${inColLetter}${endRow+1}`);
         totalOutCols.push(`${outColLetter}${endRow+1}`);
@@ -1262,20 +1278,20 @@ function exportAnnualMonthlyReport() {
         overallOutSum += stats[m].total.outgoing;
     });
 
+    // 最右下角的總計 (恢復原本的結構：明細列3格，總計列合併3格)
     rowInTotal.push(
         { t: 'n', v: overallInSum, f: `SUM(${overallInColLetter}3:${overallInColLetter}${endRow})` },
         { t: 'n', v: overallOutSum, f: `SUM(${overallOutColLetter}3:${overallOutColLetter}${endRow})` },
         { t: 'n', v: overallInSum + overallOutSum, f: `SUM(${overallInColLetter}3:${overallInColLetter}${endRow})+SUM(${overallOutColLetter}3:${overallOutColLetter}${endRow})` }
     );
-
-    rowSubTotal.push({ t: 'n', v: overallInSum + overallOutSum, f: `${overallInColLetter}${endRow+1}+${overallOutColLetter}${endRow+1}` }, "", ""); // for merge 3 cols
+    rowSubTotal.push({ t: 'n', v: overallInSum + overallOutSum, f: `${overallInColLetter}${endRow+1}+${overallOutColLetter}${endRow+1}` }, "", ""); // 預留合併3格
 
     wsData.push(rowInTotal);
     wsData.push(rowSubTotal);
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-    // 跨欄置中
+    // 跨欄置中設定
     const merges = [];
     merges.push({ s: { r: 0, c: 0 }, e: { r: 1, c: 0 } });
     
@@ -1293,13 +1309,14 @@ function exportAnnualMonthlyReport() {
     // 將 "加總" 跨兩列合併
     merges.push({ s: { r: totalRowIdx1, c: 0 }, e: { r: totalRowIdx2, c: 0 } });
     
-    // 對齊調整：底部加總與其他欄位垂直對齊
+    // 對齊調整：底部部門加總橫跨收發兩欄
     let bottomColIndex = 1;
     deptArray.forEach(() => {
         merges.push({ s: { r: totalRowIdx2, c: bottomColIndex }, e: { r: totalRowIdx2, c: bottomColIndex + 1 } });
         bottomColIndex += 2;
     });
-    // 右下角最後三欄合併
+    
+    // 恢復：右下角最後三欄跨合併 (僅合併最後一列的3格)
     merges.push({ s: { r: totalRowIdx2, c: bottomColIndex }, e: { r: totalRowIdx2, c: bottomColIndex + 2 } });
     
     ws['!merges'] = merges;
@@ -1312,7 +1329,12 @@ function exportAnnualMonthlyReport() {
 
     const rows = [];
     for(let i = 0; i < wsData.length; i++) {
-        rows.push({ hpx: 26 }); // 設定 26px 的列高，讓畫面更有呼吸空間
+        // 第一列(明細)與最後一列(總計)設定稍微大一點的高度
+        if (i === totalRowIdx1 || i === totalRowIdx2) {
+            rows.push({ hpx: 32 }); 
+        } else {
+            rows.push({ hpx: 26 });
+        }
     }
     ws['!rows'] = rows;
 
@@ -1335,31 +1357,50 @@ function exportAnnualMonthlyReport() {
             };
             
             const isHeader = (R === 0 || R === 1);
-            const isTotalRow = (R >= range.e.r - 1); // 最後兩列是總計列
-            const isTotalCol = (C >= range.e.c - 2);
+            const isTotalRow1 = (R === range.e.r - 1);
+            const isTotalRow2 = (R === range.e.r);
+            const isTotalCol = (C >= range.e.c - 2); // 總計區塊(最後3欄)
             
             if (isHeader) {
                 style.font.bold = true;
                 if (R === 0) {
-                    style.fill = { fgColor: { rgb: isTotalCol ? "C65911" : "203764" } }; // 表頭：深藍 / 總計深橘
+                    style.fill = { fgColor: { rgb: isTotalCol ? "C65911" : "203764" } }; 
                     style.font.color = { rgb: "FFFFFFFF" };
                 } else { 
-                    style.fill = { fgColor: { rgb: isTotalCol ? "F4B084" : "D9E1F2" } }; // 次表頭：淺藍 / 淺橘
+                    style.fill = { fgColor: { rgb: isTotalCol ? "F4B084" : "D9E1F2" } }; 
                 }
-            } else if (isTotalRow) {
+            } else if (isTotalRow1 || isTotalRow2) {
+                // 建議一：統一邏輯法（橙色 L 型包圍）
                 style.numFmt = "#,##0";
-                style.font.bold = true;
-                style.fill = { fgColor: { rgb: "FCE4D6" } }; // 底部加總一律用淺橘色
+                style.font.color = { rgb: "000000" }; // 統一黑字
+                style.fill = { fgColor: { rgb: isTotalCol ? "F4B084" : "FCE4D6" } }; // 全部套用橘色系，最右下角的終極總計稍微加深
+                
+                // 加粗頂部分隔線 (區隔資料與加總)
+                if (isTotalRow1) {
+                    style.border.top = { style: "medium", color: { rgb: "E89A6C" } }; // 橘色系的邊框
+                }
+
+                if (isTotalRow1) {
+                    style.font.sz = 11;
+                    style.font.bold = false;
+                    // 第一列的左側標籤與右側小計加粗
+                    if (C === 0 || C === range.e.c) {
+                        style.font.bold = true;
+                    }
+                } else if (isTotalRow2) {
+                    style.font.sz = 12;
+                    style.font.bold = true;
+                }
             } else {
                 style.numFmt = "#,##0";
                 if (C === 0) {
-                    style.fill = { fgColor: { rgb: "D9E1F2" } }; // 第一欄月份底色
+                    style.fill = { fgColor: { rgb: "D9E1F2" } };
                     style.font.bold = true;
                 } else if (isTotalCol) {
-                    style.fill = { fgColor: { rgb: "FCE4D6" } }; // 總計欄位底色
-                    if (C === range.e.c) style.font.bold = true; // 總計的小計加粗
+                    style.fill = { fgColor: { rgb: "FFF2CC" } }; // 總計欄位淡黃底色
+                    if (C === range.e.c) style.font.bold = true; 
                 } else {
-                    style.fill = { fgColor: { rgb: R % 2 === 0 ? "F9F9F9" : "FFFFFFFF" } }; // 資料列交錯底色
+                    style.fill = { fgColor: { rgb: R % 2 === 0 ? "F8FAFC" : "FFFFFFFF" } }; 
                 }
             }
             
@@ -1689,9 +1730,10 @@ async function initializeApp() {
             // 背景默默同步雲端資料，不卡住畫面
             fetchDataFromCloud().then(cloudData => {
                 if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) {
+                    const cleanData = deduplicateData(cloudData);
                     // 為了避免頻繁無意義刷新，只在筆數不同時才強制更新畫面 (您也可以選擇每次都更新)
-                    if (cloudData.length !== data.length) {
-                        data = cloudData;
+                    if (cleanData.length !== data.length) {
+                        data = cleanData;
                         localStorage.setItem('docData', JSON.stringify(data));
                         updateOverviewStats();
                         renderFilters();
@@ -1703,7 +1745,7 @@ async function initializeApp() {
         } else {
             const cloudData = await fetchDataFromCloud();
             if (cloudData && Array.isArray(cloudData)) {
-                data = cloudData;
+                data = deduplicateData(cloudData);
                 localStorage.setItem('docData', JSON.stringify(data));
             }
         }
@@ -1747,8 +1789,9 @@ async function initializeApp() {
         if (localStorage.getItem('isLoggedIn') === 'true' && GAS_URL) {
             fetchDataFromCloud().then(cloudData => {
                 if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) {
-                    if (cloudData.length !== data.length) {
-                        data = cloudData;
+                    const cleanData = deduplicateData(cloudData);
+                    if (cleanData.length !== data.length) {
+                        data = cleanData;
                         localStorage.setItem('docData', JSON.stringify(data));
                         updateOverviewStats();
                         renderFilters();
@@ -1816,7 +1859,7 @@ function importJson(event) {
                 }
             });
             localStorage.setItem('docData', JSON.stringify(data));
-            syncDataToCloud(); syncDataToCloud();
+            syncDataToCloud();
             const now = new Date();
             const timeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
             setFileInfo('收文', 'JSON 檔案還原匯入', timeStr);
