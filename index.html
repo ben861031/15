@@ -71,11 +71,11 @@ body{
 <div id="loginPage" class="min-h-screen hidden items-center justify-center bg-gradient-to-br from-[#e6edf8] to-[#f4f7fb] p-4">
     <div class="bg-white rounded-[24px] shadow-2xl p-10 w-full max-w-[360px] flex flex-col items-center relative overflow-hidden">
         <!-- 裝飾用光暈 -->
-        <div class="absolute -top-20 -right-20 w-40 h-40 bg-indigo-50 rounded-full blur-3xl opacity-60"></div>
-        <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-blue-50 rounded-full blur-3xl opacity-60"></div>
+        <div class="absolute -top-20 -right-20 w-40 h-40 bg-teal-50 rounded-full blur-3xl opacity-60"></div>
+        <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-teal-50 rounded-full blur-3xl opacity-60"></div>
         
         <!-- Icon -->
-        <div class="bg-indigo-100 text-indigo-600 rounded-full w-20 h-20 flex items-center justify-center mb-5 z-10">
+        <div class="bg-teal-50 text-teal-600 rounded-full w-20 h-20 flex items-center justify-center mb-5 z-10">
             <i data-lucide="user" class="w-10 h-10"></i>
         </div>
         <!-- Title -->
@@ -83,9 +83,9 @@ body{
         
         <!-- Form -->
         <div class="w-full space-y-4 z-10">
-            <input type="text" id="empId" placeholder="員工編號" class="w-full border border-slate-200 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-400">
-            <input type="password" id="empPwd" placeholder="密碼" class="w-full border border-slate-200 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder:text-slate-400" onkeypress="if(event.key === 'Enter') handleLogin()">
-            <button onclick="handleLogin()" class="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-full py-3 text-sm font-semibold shadow-md shadow-blue-200 transition-all mt-4 transform hover:scale-[1.02] active:scale-95">登入</button>
+            <input type="text" id="empId" placeholder="員工編號" class="w-full border border-slate-200 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#14a9a8]/50 focus:border-transparent transition-all placeholder:text-slate-400">
+            <input type="password" id="empPwd" placeholder="密碼" class="w-full border border-slate-200 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#14a9a8]/50 focus:border-transparent transition-all placeholder:text-slate-400" onkeypress="if(event.key === 'Enter') handleLogin()">
+            <button onclick="handleLogin()" class="w-full bg-[#14a9a8] hover:bg-teal-600 text-white rounded-full py-3 text-sm font-semibold shadow-md shadow-teal-200/50 transition-all mt-4 transform hover:scale-[1.02] active:scale-95">登入</button>
         </div>
     </div>
 </div>
@@ -110,14 +110,14 @@ body{
                     <!-- Hover Dropdown Menu -->
                     <div class="absolute left-0 mt-3 w-48 bg-white rounded-xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 origin-top-left">
                         <div class="p-1.5 text-slate-800">
-                            <button onclick="openMailSettings()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
+                            <button onclick="openMailSettings()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-teal-50 hover:text-teal-700 rounded-lg transition-colors">
                                 <i data-lucide="mail" class="w-4 h-4 mr-2.5"></i> 信件設定
                             </button>
                             <div class="h-px bg-slate-100 my-1 mx-2"></div>
-                            <button onclick="exportJson()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
+                            <button onclick="exportJson()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-teal-50 hover:text-teal-700 rounded-lg transition-colors">
                                 <i data-lucide="download" class="w-4 h-4 mr-2.5"></i> 匯出備份 (JSON)
                             </button>
-                            <button onclick="document.getElementById('jsonFileInput').click()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
+                            <button onclick="document.getElementById('jsonFileInput').click()" class="w-full text-left flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-teal-50 hover:text-teal-700 rounded-lg transition-colors">
                                 <i data-lucide="upload" class="w-4 h-4 mr-2.5"></i> 匯入還原 (JSON)
                             </button>
                             <div class="h-px bg-slate-100 my-1 mx-2"></div>
@@ -175,21 +175,33 @@ body{
 
     <!-- 概覽數字區塊 -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 no-print">
-        <div class="bg-white rounded-3xl shadow p-5 text-center transition-transform hover:-translate-y-1">
-            <div class="text-slate-500 font-semibold">總公文量</div>
-            <div id="totalDocs" class="text-4xl font-bold text-slate-700 mt-2">0</div>
+        <div class="bg-gradient-to-br from-white to-slate-50 border border-slate-100 rounded-3xl shadow-sm p-5 transition-all hover:shadow-md hover:-translate-y-1 group">
+            <div class="flex items-center justify-between mb-1">
+                <div class="text-slate-500 font-semibold text-sm">總公文量</div>
+                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-[#14a9a8]/10 group-hover:text-[#14a9a8] transition-colors"><i data-lucide="file-stack" class="w-4 h-4"></i></div>
+            </div>
+            <div id="totalDocs" class="text-3xl font-bold text-slate-800">0</div>
         </div>
-        <div class="bg-white rounded-3xl shadow p-5 text-center transition-transform hover:-translate-y-1">
-            <div class="text-slate-500 font-semibold">部門數</div>
-            <div id="deptCount" class="text-4xl font-bold text-slate-700 mt-2">0</div>
+        <div class="bg-gradient-to-br from-white to-slate-50 border border-slate-100 rounded-3xl shadow-sm p-5 transition-all hover:shadow-md hover:-translate-y-1 group">
+            <div class="flex items-center justify-between mb-1">
+                <div class="text-slate-500 font-semibold text-sm">部門數</div>
+                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-[#14a9a8]/10 group-hover:text-[#14a9a8] transition-colors"><i data-lucide="building-2" class="w-4 h-4"></i></div>
+            </div>
+            <div id="deptCount" class="text-3xl font-bold text-slate-800">0</div>
         </div>
-        <div class="bg-white rounded-3xl shadow p-5 text-center transition-transform hover:-translate-y-1">
-            <div class="text-slate-500 font-semibold">收文</div>
-            <div id="incomingCount" class="text-4xl font-bold text-blue-700 mt-2">0</div>
+        <div class="bg-gradient-to-br from-white to-slate-50 border border-slate-100 rounded-3xl shadow-sm p-5 transition-all hover:shadow-md hover:-translate-y-1 group">
+            <div class="flex items-center justify-between mb-1">
+                <div class="text-slate-500 font-semibold text-sm">收文</div>
+                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-[#14a9a8]/10 group-hover:text-[#14a9a8] transition-colors"><i data-lucide="inbox" class="w-4 h-4"></i></div>
+            </div>
+            <div id="incomingCount" class="text-3xl font-bold text-slate-800">0</div>
         </div>
-        <div class="bg-white rounded-3xl shadow p-5 text-center transition-transform hover:-translate-y-1">
-            <div class="text-slate-500 font-semibold">發文</div>
-            <div id="outgoingCount" class="text-4xl font-bold text-emerald-700 mt-2">0</div>
+        <div class="bg-gradient-to-br from-white to-slate-50 border border-slate-100 rounded-3xl shadow-sm p-5 transition-all hover:shadow-md hover:-translate-y-1 group">
+            <div class="flex items-center justify-between mb-1">
+                <div class="text-slate-500 font-semibold text-sm">發文</div>
+                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-[#14a9a8]/10 group-hover:text-[#14a9a8] transition-colors"><i data-lucide="send" class="w-4 h-4"></i></div>
+            </div>
+            <div id="outgoingCount" class="text-3xl font-bold text-slate-800">0</div>
         </div>
     </div>
 
@@ -199,7 +211,7 @@ body{
             <div>
                 <label class="font-semibold text-sm">報表月份</label>
                 <div class="flex gap-2 mt-2">
-                    <select id="reportYear" class="w-1/2 border border-slate-200 rounded-2xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    <select id="reportYear" class="w-1/2 border border-slate-200 rounded-2xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-[#14a9a8]/50 bg-white">
                         <option value="">年度</option>
                         <option value="112年">112年</option>
                         <option value="113年">113年</option>
@@ -209,7 +221,7 @@ body{
                         <option value="117年">117年</option>
                         <option value="118年">118年</option>
                     </select>
-                    <select id="reportMonth" class="w-1/2 border border-slate-200 rounded-2xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    <select id="reportMonth" class="w-1/2 border border-slate-200 rounded-2xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-[#14a9a8]/50 bg-white">
                         <option value="">月份</option>
                         <option value="1月份">1月</option>
                         <option value="2月份">2月</option>
@@ -229,13 +241,13 @@ body{
 
             <div>
                 <label class="font-semibold text-sm">部門篩選</label>
-                <select id="deptFilter" class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="deptFilter" class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#14a9a8]/50">
                     <option value="">全部部門</option>
                 </select>
             </div>
             <div>
                 <label class="font-semibold text-sm">收發文篩選</label>
-                <select id="modeFilter" class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="modeFilter" class="mt-2 w-full border border-slate-200 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#14a9a8]/50">
                     <option value="">全部</option>
                     <option value="收文">收文</option>
                     <option value="發文">發文</option>
@@ -244,17 +256,17 @@ body{
             <div>
                 <label class="font-semibold text-sm">資料維護</label>
                 <div class="flex gap-2 mt-2">
-                    <button onclick="checkDataAnomalies()" class="w-1/2 flex items-center justify-center bg-sky-600 hover:bg-sky-700 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-sky-600">
+                    <button onclick="checkDataAnomalies()" class="w-1/2 flex items-center justify-center bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-2xl py-3 font-semibold transition-colors text-sm border border-sky-200 hover:border-sky-300">
                         <i data-lucide="clipboard-check" class="w-4 h-4 mr-1"></i> 查核
                     </button>
-                    <button onclick="showBatchDeleteModal()" class="w-1/2 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-red-500">
+                    <button onclick="showBatchDeleteModal()" class="w-1/2 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl py-3 font-semibold transition-colors text-sm border border-red-200 hover:border-red-300">
                         <i data-lucide="folder-minus" class="w-4 h-4 mr-1"></i> 刪除
                     </button>
                 </div>
             </div>
             <div>
                 <label class="font-semibold text-sm">報表輸出</label>
-                <button onclick="exportEmailReport()" class="mt-2 w-full flex items-center justify-center bg-teal-600 hover:bg-teal-700 text-white rounded-2xl py-3 font-semibold shadow-sm transition-colors text-sm border border-teal-600">
+                <button onclick="exportEmailReport()" class="mt-2 w-full flex items-center justify-center bg-teal-50 hover:bg-teal-100 text-[#14a9a8] rounded-2xl py-3 font-semibold transition-colors text-sm border border-teal-200 hover:border-teal-300">
                     <i data-lucide="mail" class="w-4 h-4 mr-1"></i> 主管信件
                 </button>
             </div>
@@ -271,32 +283,32 @@ body{
                         <span class="leading-snug"><span class="dynamic-period text-slate-900 mr-1"></span>各部門收發文統計</span>
                     </h2>
                     <div class="flex items-center gap-2 flex-wrap no-print justify-end w-full" data-html2canvas-ignore="true">
-                        <button onclick="exportToPDF()" class="flex items-center bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出 PDF">
+                        <button onclick="exportToPDF()" class="flex items-center bg-white hover:bg-slate-50 text-slate-600 hover:text-red-500 border border-slate-200 hover:border-red-500/30 px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all active:scale-95" title="匯出 PDF">
                             <i data-lucide="file-down" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">匯出 PDF</span>
                         </button>
-                        <button onclick="copyDeptTable()" class="flex items-center bg-slate-500 hover:bg-slate-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="複製表格">
+                        <button onclick="copyDeptTable()" class="flex items-center bg-white hover:bg-slate-50 text-slate-600 hover:text-[#14a9a8] border border-slate-200 hover:border-[#14a9a8]/30 px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all active:scale-95" title="複製表格">
                             <i data-lucide="copy" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">複製表格</span>
                         </button>
-                        <button onclick="exportDeptStats()" class="flex items-center bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出統計 (Excel)">
+                        <button onclick="exportDeptStats()" class="flex items-center bg-white hover:bg-slate-50 text-slate-600 hover:text-teal-600 border border-slate-200 hover:border-teal-600/30 px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all active:scale-95" title="匯出統計 (Excel)">
                             <i data-lucide="download" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">匯出統計</span>
                         </button>
-                        <button onclick="exportAnnualMonthlyReport()" class="flex items-center bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="匯出年度月報表 (Excel)">
+                        <button onclick="exportAnnualMonthlyReport()" class="flex items-center bg-white hover:bg-slate-50 text-slate-600 hover:text-teal-600 border border-slate-200 hover:border-teal-600/30 px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all active:scale-95" title="匯出年度月報表 (Excel)">
                             <i data-lucide="table-2" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">年度月報表</span>
                         </button>
                     </div>
                 </div>
                 <div class="overflow-auto max-h-[60vh]">
                     <table id="deptTable" class="w-full text-sm border-collapse">
-                        <thead class="bg-slate-800 text-white sticky top-0 z-20">
+                        <thead class="bg-white/90 backdrop-blur-sm text-slate-500 font-semibold tracking-widest text-[14px] border-b-2 border-slate-200 sticky top-0 z-20">
                             <tr>
-                                <th class="px-4 py-3 text-center"><div class="cell-content" style="position: relative;">部門</div></th>
+                                <th class="px-4 sm:px-6 py-3 text-left"><div class="cell-content" style="position: relative;">部門</div></th>
                                 <th class="px-4 py-3 text-center"><div class="cell-content" style="position: relative;">收文</div></th>
                                 <th class="px-4 py-3 text-center"><div class="cell-content" style="position: relative;">發文</div></th>
                                 <th class="px-4 py-3 text-center"><div class="cell-content" style="position: relative;">小計</div></th>
                             </tr>
                         </thead>
                         <tbody id="deptStatsBody"></tbody>
-                        <tfoot id="deptStatsFoot" class="bg-slate-100 sticky bottom-0 border-t-2 border-slate-300 font-bold z-20"></tfoot>
+                        <tfoot id="deptStatsFoot" class="bg-white/90 backdrop-blur-sm sticky bottom-0 border-t-2 border-slate-200 z-20"></tfoot>
                     </table>
                 </div>
             </div>
@@ -314,7 +326,7 @@ body{
                             <button onclick="changeChartType('line')" id="btnLine" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all">折線圖</button>
                             <button onclick="changeChartType('pie')" id="btnPie" class="px-3 py-1.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all">圓餅圖</button>
                         </div>
-                        <button onclick="copyChart()" class="flex items-center bg-slate-500 hover:bg-slate-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-colors" title="複製圖表">
+                        <button onclick="copyChart()" class="flex items-center bg-white hover:bg-slate-50 text-slate-600 hover:text-[#14a9a8] border border-slate-200 hover:border-[#14a9a8]/30 px-3 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all active:scale-95" title="複製圖表">
                             <i data-lucide="copy" class="w-4 h-4 sm:mr-1"></i> <span class="hidden sm:inline">複製圖表</span>
                         </button>
                     </div>
@@ -339,7 +351,7 @@ body{
         <!-- Header -->
         <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
             <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <i data-lucide="mail" class="w-5 h-5 text-indigo-500"></i> 信件設定
+                <i data-lucide="mail" class="w-5 h-5 text-teal-600"></i> 信件設定
             </h3>
             <button onclick="closeMailSettings()" class="text-slate-400 hover:text-slate-600 transition-colors">
                 <i data-lucide="x" class="w-5 h-5"></i>
@@ -349,11 +361,11 @@ body{
         <div class="p-6 space-y-4">
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1">正本收件者 (To)</label>
-                <textarea id="mailSettingsTo" rows="2" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50" placeholder="例如: 某某 <email@domain.com> (多筆請用逗號隔開)"></textarea>
+                <textarea id="mailSettingsTo" rows="2" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#14a9a8] bg-slate-50" placeholder="例如: 某某 <email@domain.com> (多筆請用逗號隔開)"></textarea>
             </div>
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1">副本收件者 (Cc)</label>
-                <textarea id="mailSettingsCc" rows="2" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50" placeholder="例如: 某某 <email@domain.com> (多筆請用逗號隔開)"></textarea>
+                <textarea id="mailSettingsCc" rows="2" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#14a9a8] bg-slate-50" placeholder="例如: 某某 <email@domain.com> (多筆請用逗號隔開)"></textarea>
             </div>
             <div class="text-xs text-slate-500 flex items-start gap-1.5 mt-2">
                 <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
@@ -362,10 +374,10 @@ body{
         </div>
         <!-- Footer -->
         <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
-            <button onclick="closeMailSettings()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-200 transition-colors">
+            <button onclick="closeMailSettings()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
                 取消
             </button>
-            <button onclick="saveMailSettings()" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 shadow-sm transition-colors flex items-center gap-2">
+            <button onclick="saveMailSettings()" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-[#14a9a8] hover:bg-teal-600 shadow-sm transition-colors flex items-center gap-2">
                 <i data-lucide="save" class="w-4 h-4"></i> 儲存設定
             </button>
         </div>
@@ -1098,10 +1110,10 @@ function updateOverviewStats() {
     // 如果有篩選，就顯示篩選後的數字；如果沒有篩選，就顯示全部總數
     const targetData = isFiltered ? filteredData : data;
 
-    document.getElementById('totalDocs').textContent = targetData.length;
-    document.getElementById('deptCount').textContent = new Set(targetData.map(x => x.dept)).size;
-    document.getElementById('incomingCount').textContent = targetData.filter(x => x.mode === '收文').length;
-    document.getElementById('outgoingCount').textContent = targetData.filter(x => x.mode === '發文').length;
+    document.getElementById('totalDocs').textContent = targetData.length.toLocaleString();
+    document.getElementById('deptCount').textContent = new Set(targetData.map(x => x.dept)).size.toLocaleString();
+    document.getElementById('incomingCount').textContent = targetData.filter(x => x.mode === '收文').length.toLocaleString();
+    document.getElementById('outgoingCount').textContent = targetData.filter(x => x.mode === '發文').length.toLocaleString();
 }
 
 function renderFilters() {
@@ -1163,20 +1175,20 @@ function renderDeptStatsAndChart() {
     } else {
         if (chartEmptyState) chartEmptyState.classList.add('hidden');
         document.getElementById('deptStatsBody').innerHTML = sortedStats.map(([dept, val]) => `
-            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                <td class="px-4 py-3 font-medium text-slate-800 text-center"><div class="cell-content" style="position: relative;">${dept}</div></td>
-                <td class="px-4 py-3 text-slate-600 text-center"><div class="cell-content" style="position: relative;">${val.incoming.toLocaleString()}</div></td>
-                <td class="px-4 py-3 text-slate-600 text-center"><div class="cell-content" style="position: relative;">${val.outgoing.toLocaleString()}</div></td>
-                <td class="px-4 py-3 font-semibold text-slate-900 text-center"><div class="cell-content" style="position: relative;">${(val.incoming + val.outgoing).toLocaleString()}</div></td>
+            <tr class="border-b border-slate-100 hover:bg-slate-100/50 even:bg-slate-50/70 transition-colors">
+                <td class="px-4 sm:px-6 py-3.5 font-medium text-slate-700 text-left tracking-wide"><div class="cell-content" style="position: relative;">${dept}</div></td>
+                <td class="px-4 py-3.5 text-slate-600 font-normal text-center"><div class="cell-content" style="position: relative;">${val.incoming.toLocaleString()}</div></td>
+                <td class="px-4 py-3.5 text-slate-600 font-normal text-center"><div class="cell-content" style="position: relative;">${val.outgoing.toLocaleString()}</div></td>
+                <td class="px-4 py-3.5 font-semibold text-slate-900 text-center"><div class="cell-content" style="position: relative;">${(val.incoming + val.outgoing).toLocaleString()}</div></td>
             </tr>
         `).join('');
 
         document.getElementById('deptStatsFoot').innerHTML = `
-            <tr class="text-slate-900">
-                <td class="px-4 py-3 font-bold text-center"><div class="cell-content" style="position: relative;">全公司總計</div></td>
-                <td class="px-4 py-3 font-bold text-slate-700 text-center"><div class="cell-content" style="position: relative;">${totalIncoming.toLocaleString()}</div></td>
-                <td class="px-4 py-3 font-bold text-slate-700 text-center"><div class="cell-content" style="position: relative;">${totalOutgoing.toLocaleString()}</div></td>
-                <td class="px-4 py-3 font-black text-center"><div class="cell-content" style="position: relative;">${(totalIncoming + totalOutgoing).toLocaleString()}</div></td>
+            <tr class="text-slate-700">
+                <td class="px-4 sm:px-6 py-3.5 font-bold text-left tracking-widest"><div class="cell-content" style="position: relative;">全公司總計</div></td>
+                <td class="px-4 py-3.5 font-semibold text-slate-600 text-center"><div class="cell-content" style="position: relative;">${totalIncoming.toLocaleString()}</div></td>
+                <td class="px-4 py-3.5 font-semibold text-slate-600 text-center"><div class="cell-content" style="position: relative;">${totalOutgoing.toLocaleString()}</div></td>
+                <td class="px-4 py-3.5 font-bold text-slate-900 text-center text-base"><div class="cell-content" style="position: relative;">${(totalIncoming + totalOutgoing).toLocaleString()}</div></td>
             </tr>
         `;
         renderChart(sortedStats);
