@@ -91,7 +91,7 @@ body{
 </div>
 
 <!-- 系統上方導覽列 -->
-<nav class="bg-[#14a9a8] text-white shadow-md sticky top-0 z-50 no-print">
+<nav id="mainNav" class="bg-[#14a9a8] text-white shadow-md sticky top-0 z-50 no-print hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-14">
             <!-- 左側：Logo與系統名稱及選單 -->
@@ -449,6 +449,8 @@ async function handleLogin() {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('loginPage').classList.remove('flex');
             document.getElementById('mainApp').classList.remove('hidden');
+            const mainNav = document.getElementById('mainNav');
+            if (mainNav) mainNav.classList.remove('hidden');
             localStorage.setItem('isLoggedIn', 'true');
             if (result.dept && result.name) {
                 localStorage.setItem('userDept', result.dept);
@@ -1832,6 +1834,8 @@ async function initializeApp() {
         loginPage.classList.add('hidden');
         loginPage.classList.remove('flex');
         mainApp.classList.remove('hidden');
+        const mainNav = document.getElementById('mainNav');
+        if (mainNav) mainNav.classList.remove('hidden');
         const dept = localStorage.getItem('userDept');
         const name = localStorage.getItem('userName');
         const navUserName = document.getElementById('navUserName');
@@ -1844,6 +1848,8 @@ async function initializeApp() {
         loginPage.classList.remove('hidden');
         loginPage.classList.add('flex');
         mainApp.classList.add('hidden');
+        const mainNav = document.getElementById('mainNav');
+        if (mainNav) mainNav.classList.add('hidden');
     }
     
     if (loadingScreen) {
