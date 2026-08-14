@@ -265,10 +265,15 @@ body{
                 </div>
             </div>
             <div>
-                <label class="font-semibold text-sm">報表輸出</label>
-                <button onclick="exportEmailReport()" class="mt-2 w-full flex items-center justify-center bg-teal-50 hover:bg-teal-100 text-[#14a9a8] rounded-2xl py-3 font-semibold transition-colors text-sm border border-teal-200 hover:border-teal-300">
-                    <i data-lucide="mail" class="w-4 h-4 mr-1"></i> 主管信件
-                </button>
+                <label class="font-semibold text-sm">進階功能</label>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="openSmartImportModal()" class="w-1/2 flex items-center justify-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-2xl py-3 font-semibold transition-colors text-sm border border-indigo-200 hover:border-indigo-300" title="智慧匯入 (從剪貼簿)">
+                        <i data-lucide="sparkles" class="w-4 h-4 mr-1"></i> 智慧匯入
+                    </button>
+                    <button onclick="exportEmailReport()" class="w-1/2 flex items-center justify-center bg-teal-50 hover:bg-teal-100 text-[#14a9a8] rounded-2xl py-3 font-semibold transition-colors text-sm border border-teal-200 hover:border-teal-300">
+                        <i data-lucide="mail" class="w-4 h-4 mr-1"></i> 信件
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -379,6 +384,81 @@ body{
             </button>
             <button onclick="saveMailSettings()" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-[#14a9a8] hover:bg-teal-600 shadow-sm transition-colors flex items-center gap-2">
                 <i data-lucide="save" class="w-4 h-4"></i> 儲存設定
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 智慧匯入 Modal -->
+<div id="smartImportModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+    <div id="smartImportContainer" class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 transform scale-95 opacity-0 transition-all duration-300">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
+            <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i data-lucide="sparkles" class="w-5 h-5 text-[#14a9a8]"></i> 智慧匯入資料
+            </h3>
+            <button onclick="closeSmartImportModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <!-- Body -->
+        <div class="p-6 space-y-4">
+            <div class="grid grid-cols-3 gap-3 mb-2">
+                <select id="smartMode" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#14a9a8] bg-slate-50">
+                    <option value="" disabled selected>選擇類型</option>
+                    <option value="收文">收文</option>
+                    <option value="發文">發文</option>
+                </select>
+                <select id="smartYear" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#14a9a8] bg-slate-50">
+                    <option value="" disabled selected>選擇年度</option>
+                    <option value="113年">113年</option>
+                    <option value="114年">114年</option>
+                    <option value="115年">115年</option>
+                    <option value="116年">116年</option>
+                </select>
+                <select id="smartMonth" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#14a9a8] bg-slate-50">
+                    <option value="" disabled selected>選擇月份</option>
+                    <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option>
+                    <option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option>
+                    <option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1">貼上資料 <span class="text-xs text-slate-400 font-normal ml-2">(請直接在下方按 Ctrl+V 貼上從網頁或 Excel 複製的內容)</span></label>
+                <textarea id="smartPasteArea" rows="6" class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#14a9a8] bg-slate-50 placeholder:text-slate-400" placeholder="請在此處貼上資料..." oninput="handleSmartPaste()"></textarea>
+            </div>
+            
+            <div id="smartPreview" class="hidden">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span class="text-sm font-semibold text-emerald-600" id="smartPreviewCount">偵測到 0 筆資料</span>
+                </div>
+                <div class="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden text-xs">
+                    <table class="w-full">
+                        <thead class="bg-slate-100 text-slate-500">
+                            <tr>
+                                <th class="px-3 py-2 text-left">文號</th>
+                                <th class="px-3 py-2 text-left">文別</th>
+                                <th class="px-3 py-2 text-left">文字號</th>
+                                <th class="px-3 py-2 text-left">主旨</th>
+                                <th class="px-3 py-2 text-left">部門</th>
+                            </tr>
+                        </thead>
+                        <tbody id="smartPreviewBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-2xl">
+            <button onclick="closeSmartImportModal()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
+                取消
+            </button>
+            <button id="smartImportBtn" disabled onclick="executeSmartImport()" class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-slate-300 cursor-not-allowed transition-colors flex items-center gap-2">
+                <i data-lucide="download" class="w-4 h-4"></i> 確認匯入
             </button>
         </div>
     </div>
@@ -2022,6 +2102,272 @@ function importJson(event) {
         }
     };
     reader.readAsText(file);
+}
+
+// --- 智慧匯入相關功能 ---
+let smartParsedData = [];
+
+function openSmartImportModal() {
+    const modal = document.getElementById('smartImportModal');
+    const container = document.getElementById('smartImportContainer');
+    document.getElementById('smartPasteArea').value = '';
+    document.getElementById('smartPreview').classList.add('hidden');
+    document.getElementById('smartMode').value = '';
+    
+    // 預設年度為今年民國年
+    const currentYear = new Date().getFullYear() - 1911;
+    let yOpt = Array.from(document.getElementById('smartYear').options).find(o => o.value === `${currentYear}年`);
+    if (yOpt) yOpt.selected = true;
+    else document.getElementById('smartYear').value = '';
+    
+    // 預設月份為這個月
+    document.getElementById('smartMonth').value = String(new Date().getMonth() + 1);
+    
+    smartParsedData = [];
+    updateSmartImportBtn();
+    
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        container.classList.remove('scale-95', 'opacity-0');
+        container.classList.add('scale-100', 'opacity-100');
+        document.getElementById('smartPasteArea').focus();
+    }, 10);
+}
+
+function closeSmartImportModal() {
+    const modal = document.getElementById('smartImportModal');
+    const container = document.getElementById('smartImportContainer');
+    container.classList.remove('scale-100', 'opacity-100');
+    container.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+document.getElementById('smartMode').addEventListener('change', updateSmartImportBtn);
+document.getElementById('smartYear').addEventListener('change', updateSmartImportBtn);
+document.getElementById('smartMonth').addEventListener('change', updateSmartImportBtn);
+
+function updateSmartImportBtn() {
+    const btn = document.getElementById('smartImportBtn');
+    const m = document.getElementById('smartMode').value;
+    const y = document.getElementById('smartYear').value;
+    const mo = document.getElementById('smartMonth').value;
+    
+    if (m && y && mo && smartParsedData.length > 0) {
+        btn.disabled = false;
+        btn.className = "px-4 py-2 rounded-xl text-sm font-semibold text-white bg-[#14a9a8] hover:bg-teal-600 shadow-sm transition-colors flex items-center gap-2";
+    } else {
+        btn.disabled = true;
+        btn.className = "px-4 py-2 rounded-xl text-sm font-semibold text-white bg-slate-300 cursor-not-allowed transition-colors flex items-center gap-2";
+    }
+}
+
+function handleSmartPaste() {
+    setTimeout(() => { // delay for paste to complete
+        const text = document.getElementById('smartPasteArea').value;
+        if (!text.trim()) {
+            document.getElementById('smartPreview').classList.add('hidden');
+            smartParsedData = [];
+            updateSmartImportBtn();
+            return;
+        }
+        
+        smartParsedData = parseSmartImport(text);
+        const preview = document.getElementById('smartPreview');
+        const tbody = document.getElementById('smartPreviewBody');
+        const count = document.getElementById('smartPreviewCount');
+        
+        if (smartParsedData.length > 0) {
+            preview.classList.remove('hidden');
+            count.textContent = `偵測到 ${smartParsedData.length} 筆有效資料`;
+            count.className = "text-sm font-semibold text-emerald-600";
+            
+            // Show up to 3 previews
+            tbody.innerHTML = '';
+            const limit = Math.min(3, smartParsedData.length);
+            for(let i=0; i<limit; i++) {
+                const d = smartParsedData[i];
+                tbody.innerHTML += `<tr>
+                    <td class="px-3 py-2 text-slate-700 font-mono text-[11px]">${d.docNo}</td>
+                    <td class="px-3 py-2 text-slate-500 text-[11px]">${d.docType || '-'}</td>
+                    <td class="px-3 py-2 text-slate-500 text-[11px] truncate max-w-[100px]" title="${d.docRef || ''}">${d.docRef || '-'}</td>
+                    <td class="px-3 py-2 text-slate-500 text-[11px] truncate max-w-[150px]" title="${d.subject || ''}">${d.subject || '-'}</td>
+                    <td class="px-3 py-2 text-[11px]"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md whitespace-nowrap">${d.dept}</span></td>
+                </tr>`;
+            }
+            if (smartParsedData.length > 3) {
+                tbody.innerHTML += `<tr><td colspan="5" class="px-3 py-2 text-center text-slate-400 italic text-[11px]">...以及其他 ${smartParsedData.length - 3} 筆</td></tr>`;
+            }
+        } else {
+            preview.classList.remove('hidden');
+            count.textContent = `無法辨識資料，請確認複製的內容是否正確`;
+            count.className = "text-sm font-semibold text-red-500";
+            tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-2 text-center text-slate-400 text-[11px]">系統找不到符合10碼格式的總收發文號</td></tr>`;
+        }
+        updateSmartImportBtn();
+    }, 50);
+}
+
+function parseSmartImport(text) {
+    const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+    const records = [];
+    
+    // Check if it's standard TSV
+    const tsvLines = lines.filter(l => l.split('\t').length >= 3);
+    
+    if (tsvLines.length >= Math.max(1, lines.length / 2)) {
+        let docNoIdx = 0, refNoIdx = 2, deptIdx = 4, typeIdx = -1, subjIdx = -1;
+        const header = lines[0].split('\t');
+        const hDoc = header.findIndex(h => h.includes('收發文號'));
+        const hRef = header.findIndex(h => h.includes('文字號'));
+        const hDept = header.findIndex(h => h.includes('部門') || h.includes('單位'));
+        const hType = header.findIndex(h => h.includes('文別'));
+        const hSubj = header.findIndex(h => h.includes('主旨'));
+        
+        if (hDoc !== -1) docNoIdx = hDoc;
+        if (hRef !== -1) refNoIdx = hRef;
+        if (hDept !== -1) deptIdx = hDept;
+        if (hType !== -1) typeIdx = hType;
+        if (hSubj !== -1) subjIdx = hSubj;
+        
+        for (let i = (hDoc !== -1 ? 1 : 0); i < lines.length; i++) {
+            const cells = lines[i].split('\t');
+            if (cells.length < 2) continue;
+            const docNo = (cells[docNoIdx] || '').trim();
+            if (!/^\d{10}$/.test(docNo)) continue;
+            
+            let dept = (cells[deptIdx] || cells[cells.length-1] || '').trim();
+            if (dept === '水利防災部') dept = '水利部';
+            if (!dept) dept = '未分類';
+            
+            let docType = typeIdx !== -1 ? (cells[typeIdx] || '').trim() : '';
+            let subject = subjIdx !== -1 ? (cells[subjIdx] || '').trim() : '';
+            
+            records.push({ docNo, docRef: (cells[refNoIdx] || '').trim(), dept, docType, subject });
+        }
+    } else {
+        // Heuristic block parsing for web page copy
+        let currentRecord = null;
+        for (let i = 0; i < text.split(/\r?\n/).length; i++) {
+            const rawLine = text.split(/\r?\n/)[i];
+            const line = rawLine.trim();
+            if (/^\d{10}$/.test(line)) {
+                if (currentRecord) records.push(currentRecord);
+                currentRecord = { docNo: line, lines: [], rawLines: [] };
+            } else if (currentRecord) {
+                currentRecord.lines.push(line);
+                currentRecord.rawLines.push(rawLine);
+            }
+        }
+        if (currentRecord) records.push(currentRecord);
+        
+        for (let i = 0; i < records.length; i++) {
+            const rec = records[i];
+            const fullRaw = rec.rawLines.join('\n');
+            const tabParts = fullRaw.split('\t');
+            let dept = "未分類";
+            let subject = "";
+            
+            if (tabParts.length > 1) {
+                dept = tabParts.pop().trim();
+                let beforeLastTab = tabParts.pop() || '';
+                let linesBeforeTab = beforeLastTab.split('\n');
+                subject = (linesBeforeTab[linesBeforeTab.length - 1] || '').trim();
+            }
+            if (dept === '水利防災部') dept = '水利部';
+            
+            let refNo = "";
+            let foundRef = rec.lines.find(l => l.includes('字第') && l.includes('號'));
+            if (foundRef) {
+                refNo = foundRef;
+            } else if (rec.lines.length >= 3) {
+                refNo = rec.lines[2]; 
+            }
+            
+            let docType = "";
+            if (rec.lines.length > 0) {
+                docType = rec.lines[0].trim();
+                if (/^\d{4}-\d{2}-\d{2}$/.test(docType) || docType.includes('字第')) {
+                    docType = '';
+                }
+            }
+            
+            records[i] = { docNo: rec.docNo, docRef: refNo, dept: dept, docType: docType, subject: subject };
+        }
+    }
+    return records;
+}
+
+function executeSmartImport() {
+    const mode = document.getElementById('smartMode').value;
+    const yearStr = document.getElementById('smartYear').value;
+    const month = parseInt(document.getElementById('smartMonth').value, 10);
+    const year = parseInt(yearStr.replace('年', ''), 10);
+    
+    if (!mode || !year || !month || smartParsedData.length === 0) return;
+    
+    Swal.fire({
+        title: '正在匯入資料...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+    
+    setTimeout(() => {
+        const existingKeys = new Set(data.map(d => `${d.mode}_${d.docNo}`));
+        let addedCount = 0;
+        let duplicateCount = 0;
+        let skippedUCount = 0;
+        
+        const now = new Date();
+        const importTimeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+
+        for (const rec of smartParsedData) {
+            if (mode === '收文' && rec.docNo.charAt(3) === 'U') {
+                skippedUCount++;
+                continue;
+            }
+            const key = `${mode}_${rec.docNo}`;
+            if (existingKeys.has(key)) {
+                duplicateCount++;
+                continue;
+            }
+            data.push({
+                mode: mode,
+                docNo: rec.docNo,
+                docType: rec.docType || '',
+                docRef: rec.docRef || '',
+                subject: rec.subject || '',
+                dept: rec.dept,
+                uploadYear: year,
+                uploadMonth: month,
+                importTime: importTimeStr
+            });
+            addedCount++;
+        }
+        
+        closeSmartImportModal();
+        
+        if (addedCount > 0) {
+            localStorage.setItem('docData', JSON.stringify(data));
+            syncDataToCloud();
+            setFileInfo(mode, '智慧匯入 (剪貼簿)', importTimeStr);
+            init(); // Re-initialize to update filters and stats fully
+            Swal.fire({
+                icon: 'success',
+                title: '匯入成功！',
+                html: `成功新增: <b class="text-green-600">${addedCount}</b> 筆<br>重複略過: <b class="text-slate-500">${duplicateCount}</b> 筆<br>包含U碼: <b class="text-orange-500">${skippedUCount}</b> 筆`,
+                confirmButtonColor: '#14a9a8'
+            });
+        } else {
+            Swal.fire({
+                icon: 'info',
+                title: '沒有新增資料',
+                html: `重複略過: <b class="text-slate-500">${duplicateCount}</b> 筆<br>包含U碼: <b class="text-orange-500">${skippedUCount}</b> 筆`,
+                confirmButtonColor: '#14a9a8'
+            });
+        }
+    }, 500);
 }
 </script>
 
