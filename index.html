@@ -2235,7 +2235,7 @@ function parseSmartImport(text) {
             const cells = lines[i].split('\t');
             if (cells.length < 2) continue;
             const docNo = (cells[docNoIdx] || '').trim();
-            if (!/^\d{10}$/.test(docNo)) continue;
+            if (!/^[a-zA-Z0-9]{10}$/.test(docNo)) continue;
             
             let dept = (cells[deptIdx] || cells[cells.length-1] || '').trim();
             if (dept === '水利防災部') dept = '水利部';
@@ -2252,7 +2252,7 @@ function parseSmartImport(text) {
         for (let i = 0; i < text.split(/\r?\n/).length; i++) {
             const rawLine = text.split(/\r?\n/)[i];
             const line = rawLine.trim();
-            if (/^\d{10}$/.test(line)) {
+            if (/^[a-zA-Z0-9]{10}$/.test(line)) {
                 if (currentRecord) records.push(currentRecord);
                 currentRecord = { docNo: line, lines: [], rawLines: [] };
             } else if (currentRecord) {
