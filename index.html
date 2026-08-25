@@ -735,17 +735,75 @@ async function fetchDataFromCloud() {
             if (result.settings) {
                 localStorage.setItem('mailSettings', JSON.stringify(result.settings));
             }
-            const mappedData = result.data.map(item => ({
-                mode: item['mode'] || item['收發'] || '',
-                docNo: String(item['docNo'] || item['總收發文號'] || ''),
-                docType: item['docType'] || item['文別'] || '',
-                docRef: item['docRef'] || item['來(發)文字號'] || '',
-                subject: item['subject'] || item['主旨'] || '',
-                dept: item['dept'] || item['承辦部門'] || '未分類',
-                uploadYear: parseInt(item['uploadYear'] || item['歸屬年份'], 10) || null,
-                uploadMonth: parseInt(item['uploadMonth'] || item['歸屬月份'], 10) || null,
-                importTime: item['importTime'] || item['匯入時間'] || ''
-            }));
+            let rawData = result.data;
+            let mappedData = [];
+            
+            if (rawData.length > 0 && Array.isArray(rawData[0])) {
+                // 安全正規化標題欄位，去除所有隱藏空白與不可見字元
+                const headers = rawData[0].map(h => (typeof h === 'string' ? h.replace(/\s+/g, '').trim() : h));
+                const rows = rawData.slice(1);
+                
+                mappedData = rows.map(row => {
+                    let item = {};
+                    headers.forEach((h, i) => {
+                        if (h) item[h] = row[i];
+                    });
+                    
+                    // 為了防呆，如果找不到完全符合的標題，嘗試模糊比對
+                    const getVal = (keys) => {
+                        for (let k of keys) {
+                            if (item[k] !== undefined) return item[k];
+                            // 模糊搜尋
+                            const foundKey = Object.keys(item).find(ik => ik && ik.includes(k));
+                            if (foundKey) return item[foundKey];
+                        }
+                        return '';
+                    };
+
+                    const rawDocNo = getVal(['docNo', '總收發文號']);
+                    return {
+                        mode: getVal(['mode', '收發']),
+                        docNo: String(rawDocNo).trim(),
+                        docType: getVal(['docType', '文別']),
+                        docRef: getVal(['docRef', '來(發)文字號']),
+                        subject: getVal(['subject', '主旨']),
+                        dept: getVal(['dept', '承辦部門']) || '未分類',
+                        uploadYear: parseInt(getVal(['uploadYear', '歸屬年份']), 10) || null,
+                        uploadMonth: parseInt(getVal(['uploadMonth', '歸屬月份']), 10) || null,
+                        importTime: getVal(['importTime', '匯入時間'])
+                    };
+                }).filter(d => d.docNo); // 確保一定要有文號
+                
+            } else {
+                mappedData = rawData.map(item => {
+                    const getVal = (keys) => {
+                        for (let k of keys) {
+                            if (item[k] !== undefined) return item[k];
+                            const foundKey = Object.keys(item).find(ik => ik && ik.includes(k));
+                            if (foundKey) return item[foundKey];
+                        }
+                        return '';
+                    };
+                    const rawDocNo = getVal(['docNo', '總收發文號']);
+                    return {
+                        mode: getVal(['mode', '收發']),
+                        docNo: String(rawDocNo).trim(),
+                        docType: getVal(['docType', '文別']),
+                        docRef: getVal(['docRef', '來(發)文字號']),
+                        subject: getVal(['subject', '主旨']),
+                        dept: getVal(['dept', '承辦部門']) || '未分類',
+                        uploadYear: parseInt(getVal(['uploadYear', '歸屬年份']), 10) || null,
+                        uploadMonth: parseInt(getVal(['uploadMonth', '歸屬月份']), 10) || null,
+                        importTime: getVal(['importTime', '匯入時間'])
+                    };
+                }).filter(d => d.docNo);
+            }
+            
+            if (mappedData.length === 0 && rawData.length > 1) {
+                console.error("Data was fetched but all rows were filtered out due to missing docNo! Headers:", rawData[0]);
+                alert("系統抓到了資料，但在解析時發生錯誤（找不到『總收發文號』欄位），請確認 Google Sheets 第一行是否為正確的欄位名稱！");
+            }
+            
             return mappedData;
         }
     } catch(err) {
