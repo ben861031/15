@@ -12,6 +12,7 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 
 <style>
 body{
@@ -462,9 +463,40 @@ body{
             </button>
         </div>
     </div>
+        </div>
+    </div>
 </div>
 
 <script>
+// --- 資料壓縮儲存輔助 ---
+function saveDocDataToLocal() {
+    try {
+        const compressed = LZString.compressToUTF16(JSON.stringify(data));
+        localStorage.setItem('docData', compressed);
+    } catch (err) {
+        console.error("Quota exceeded even with compression or other error", err);
+        Swal.fire('儲存失敗', '本機儲存空間不足，部分資料將無法保存在本機（但仍可同步至雲端）。請考慮清空瀏覽器快取。', 'error');
+    }
+}
+function loadDocDataFromLocal() {
+    const raw = localStorage.getItem('docData');
+    if (!raw) return null;
+    try {
+        if (raw.startsWith('[')) {
+            const parsed = JSON.parse(raw);
+            try { localStorage.setItem('docData', LZString.compressToUTF16(raw)); } catch(e){}
+            return parsed;
+        } else {
+            const decomp = LZString.decompressFromUTF16(raw);
+            if (!decomp) return null;
+            return JSON.parse(decomp);
+        }
+    } catch (err) {
+        console.error("Failed to parse local docData", err);
+        return null;
+    }
+}
+
 function openMailSettings() {
     const modal = document.getElementById('mailSettingsModal');
     const container = document.getElementById('mailSettingsContainer');
@@ -680,7 +712,7 @@ async function syncDataToCloud() {
     try {
         // 同步前強制再次去重，確保不將重複資料推上雲端
         data = deduplicateData(data);
-        localStorage.setItem('docData', JSON.stringify(data));
+        saveDocDataToLocal();
 
         await fetch(GAS_URL, {
             method: 'POST',
@@ -700,6 +732,9 @@ async function fetchDataFromCloud() {
         });
         const result = await response.json();
         if (result && result.status === 'success' && Array.isArray(result.data)) {
+            if (result.settings) {
+                localStorage.setItem('mailSettings', JSON.stringify(result.settings));
+            }
             const mappedData = result.data.map(item => ({
                 mode: item['mode'] || item['收發'] || '',
                 docNo: String(item['docNo'] || item['總收發文號'] || ''),
@@ -779,7 +814,7 @@ async function showBatchDeleteModal() {
             return;
         }
 
-        localStorage.setItem('docData', JSON.stringify(data));
+        saveDocDataToLocal();
         updateOverviewStats();
         renderFilters();
         filterData();
@@ -897,7 +932,7 @@ async function autoFixDataAnomalies() {
     const removedCount = data.length - cleanData.length;
     data = cleanData;
     
-    localStorage.setItem('docData', JSON.stringify(data));
+    saveDocDataToLocal();
     updateOverviewStats();
     renderFilters();
     filterData();
@@ -951,7 +986,7 @@ async function forceSyncWithCloud() {
             const cloudData = await fetchDataFromCloud();
             if (cloudData && Array.isArray(cloudData)) {
                 data = deduplicateData(cloudData);
-                localStorage.setItem('docData', JSON.stringify(data));
+                saveDocDataToLocal();
                 updateOverviewStats();
                 renderFilters();
                 filterData();
@@ -977,7 +1012,7 @@ async function forceSyncWithCloud() {
         });
         try {
             data = deduplicateData(data);
-            localStorage.setItem('docData', JSON.stringify(data));
+            saveDocDataToLocal();
             
             await fetch(GAS_URL, {
                 method: 'POST',
@@ -1143,7 +1178,7 @@ async function handleFile(e, mode, filename) {
                             }
                         }
                         
-                        localStorage.setItem('docData', JSON.stringify(data));
+                        saveDocDataToLocal();
                         syncDataToCloud();
                         const now = new Date();
                         const timeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
@@ -1951,9 +1986,9 @@ async function initializeApp() {
     }
 
     try {
-        const storedData = localStorage.getItem('docData');
-        if (storedData) {
-            data = JSON.parse(storedData);
+        const loadedData = loadDocDataFromLocal();
+        if (loadedData) {
+            data = loadedData;
             
             // 背景默默同步雲端資料，不卡住畫面
             fetchDataFromCloud().then(cloudData => {
@@ -1962,7 +1997,7 @@ async function initializeApp() {
                     // 為了避免頻繁無意義刷新，只在筆數不同時才強制更新畫面 (您也可以選擇每次都更新)
                     if (cleanData.length !== data.length) {
                         data = cleanData;
-                        localStorage.setItem('docData', JSON.stringify(data));
+                        saveDocDataToLocal();
                         updateOverviewStats();
                         renderFilters();
                         filterData();
@@ -1974,7 +2009,7 @@ async function initializeApp() {
             const cloudData = await fetchDataFromCloud();
             if (cloudData && Array.isArray(cloudData)) {
                 data = deduplicateData(cloudData);
-                localStorage.setItem('docData', JSON.stringify(data));
+                saveDocDataToLocal();
             }
         }
         
@@ -1986,7 +2021,7 @@ async function initializeApp() {
             }
         });
         if (migrated) {
-            localStorage.setItem('docData', JSON.stringify(data));
+            saveDocDataToLocal();
             syncDataToCloud();
         }
         
@@ -2020,7 +2055,7 @@ async function initializeApp() {
                     const cleanData = deduplicateData(cloudData);
                     if (cleanData.length !== data.length) {
                         data = cleanData;
-                        localStorage.setItem('docData', JSON.stringify(data));
+                        saveDocDataToLocal();
                         updateOverviewStats();
                         renderFilters();
                         filterData();
@@ -2086,7 +2121,7 @@ function importJson(event) {
                     }
                 }
             });
-            localStorage.setItem('docData', JSON.stringify(data));
+            saveDocDataToLocal();
             syncDataToCloud();
             const now = new Date();
             const timeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
@@ -2318,6 +2353,8 @@ function executeSmartImport() {
         let addedCount = 0;
         let duplicateCount = 0;
         let skippedUCount = 0;
+        let duplicateList = [];
+        let skippedUList = [];
         
         const now = new Date();
         const importTimeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
@@ -2325,11 +2362,13 @@ function executeSmartImport() {
         for (const rec of smartParsedData) {
             if (mode === '收文' && rec.docNo.charAt(3) === 'U') {
                 skippedUCount++;
+                skippedUList.push(rec.docNo);
                 continue;
             }
             const key = `${mode}_${rec.docNo}`;
             if (existingKeys.has(key)) {
                 duplicateCount++;
+                duplicateList.push(rec.docNo);
                 continue;
             }
             data.push({
@@ -2349,21 +2388,46 @@ function executeSmartImport() {
         closeSmartImportModal();
         
         if (addedCount > 0) {
-            localStorage.setItem('docData', JSON.stringify(data));
+            saveDocDataToLocal();
             syncDataToCloud();
             setFileInfo(mode, '智慧匯入 (剪貼簿)', importTimeStr);
             init(); // Re-initialize to update filters and stats fully
+            
+            let msgHtml = `成功新增: <b class="text-green-600">${addedCount}</b> 筆<br>重複略過: <b class="text-slate-500">${duplicateCount}</b> 筆<br>包含U碼: <b class="text-orange-500">${skippedUCount}</b> 筆`;
+            if (duplicateList.length > 0 || skippedUList.length > 0) {
+                msgHtml += `<div class="mt-4 text-left text-xs bg-slate-50 p-3 rounded-xl border border-slate-200 max-h-40 overflow-y-auto space-y-2">`;
+                if (skippedUList.length > 0) {
+                    msgHtml += `<div><div class="text-orange-600 font-bold mb-1">【略過 - U碼收文】</div><div class="text-slate-600 font-mono tracking-wider break-words">${skippedUList.join(', ')}</div></div>`;
+                }
+                if (duplicateList.length > 0) {
+                    msgHtml += `<div><div class="text-slate-600 font-bold mb-1">【略過 - 重複匯入】</div><div class="text-slate-500 font-mono tracking-wider break-words">${duplicateList.join(', ')}</div></div>`;
+                }
+                msgHtml += `</div>`;
+            }
+            
             Swal.fire({
                 icon: 'success',
                 title: '匯入成功！',
-                html: `成功新增: <b class="text-green-600">${addedCount}</b> 筆<br>重複略過: <b class="text-slate-500">${duplicateCount}</b> 筆<br>包含U碼: <b class="text-orange-500">${skippedUCount}</b> 筆`,
+                html: msgHtml,
                 confirmButtonColor: '#14a9a8'
             });
         } else {
+            let msgHtml = `重複略過: <b class="text-slate-500">${duplicateCount}</b> 筆<br>包含U碼: <b class="text-orange-500">${skippedUCount}</b> 筆`;
+            if (duplicateList.length > 0 || skippedUList.length > 0) {
+                msgHtml += `<div class="mt-4 text-left text-xs bg-slate-50 p-3 rounded-xl border border-slate-200 max-h-40 overflow-y-auto space-y-2">`;
+                if (skippedUList.length > 0) {
+                    msgHtml += `<div><div class="text-orange-600 font-bold mb-1">【略過 - U碼收文】</div><div class="text-slate-600 font-mono tracking-wider break-words">${skippedUList.join(', ')}</div></div>`;
+                }
+                if (duplicateList.length > 0) {
+                    msgHtml += `<div><div class="text-slate-600 font-bold mb-1">【略過 - 重複匯入】</div><div class="text-slate-500 font-mono tracking-wider break-words">${duplicateList.join(', ')}</div></div>`;
+                }
+                msgHtml += `</div>`;
+            }
+            
             Swal.fire({
                 icon: 'info',
                 title: '沒有新增資料',
-                html: `重複略過: <b class="text-slate-500">${duplicateCount}</b> 筆<br>包含U碼: <b class="text-orange-500">${skippedUCount}</b> 筆`,
+                html: msgHtml,
                 confirmButtonColor: '#14a9a8'
             });
         }
