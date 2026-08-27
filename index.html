@@ -2025,7 +2025,11 @@ async function initializeApp() {
         const name = localStorage.getItem('userName');
         const navUserName = document.getElementById('navUserName');
         if (dept && name) {
-            if (navUserName) navUserName.textContent = `${dept} ${name}`;
+            let displayName = name;
+            if (!displayName.startsWith(dept)) {
+                displayName = `${dept} ${name}`;
+            }
+            if (navUserName) navUserName.textContent = displayName;
         } else {
             if (navUserName) navUserName.textContent = `使用者`;
         }
